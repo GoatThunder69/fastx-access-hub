@@ -70,10 +70,10 @@ const MasterPanel = () => {
   const { user, masterAdmin, role, isPasswordAuth, loading: authLoading, signOut, canManage, canDelete, canChangePasswords, canKillSwitch, canSendBroadcast, canManageAdmins } = useMasterAuth();
 
   useEffect(() => {
-    if (!authLoading && (!user || !masterAdmin)) {
+    if (!authLoading && !masterAdmin && !isPasswordAuth) {
       navigate('/master-login');
     }
-  }, [authLoading, user, masterAdmin, navigate]);
+  }, [authLoading, masterAdmin, isPasswordAuth, navigate]);
 
   const fetchPanels = async () => {
     setLoading(true);
