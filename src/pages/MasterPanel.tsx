@@ -290,7 +290,7 @@ const MasterPanel = () => {
                         <button onClick={() => setChangingPassword(changingPassword === panel.id ? null : panel.id)} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-secondary/50 text-muted-foreground hover:text-foreground transition-all">
                           <Lock className="w-3.5 h-3.5" /> Password
                         </button>
-                        <button onClick={() => copyToClipboard(`${window.location.origin}/panel/${panel.id}`)} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-secondary/50 text-muted-foreground hover:text-foreground transition-all">
+                        <button onClick={() => copyToClipboard(`${window.location.origin}/${panel.slug || panel.id}`)} className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-secondary/50 text-muted-foreground hover:text-foreground transition-all">
                           <Globe className="w-3.5 h-3.5" /> Copy URL
                         </button>
                       </div>
