@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMasterAuth } from '@/hooks/useMasterAuth';
-import { MASTER_PASSWORDupabase';
+import { MASTER_PASSWORD } from '@/lib/supabase';
 import CFMSLogo from '@/components/CFMSLogo';
-import { Crown, Loader2, ArrowLedCheck, Lock, ArrowRight } from 'lucide-react';
+import { Crown, ArrowLeft, ShieldCheck, Lock, ArrowRight } from 'lucide-react';
 
 const MasterLogin = () => {
   const navigate = useNavigate();
