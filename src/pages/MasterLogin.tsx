@@ -13,12 +13,12 @@ const MasterLogin = () => {
   const [passLoading, setPassLoading] = useState(false);
 
   useEffect(() => {
-    if (!loading && user && masterAdmin && role) {
+    if (!loading && ((user && masterAdmin && role) || isPasswordAuth)) {
       localStorage.setItem('cfms_master', 'true');
-      localStorage.setItem('cfms_master_role', role);
+      if (role) localStorage.setItem('cfms_master_role', role);
       navigate('/master');
     }
-  }, [loading, user, masterAdmin, role, navigate]);
+  }, [loading, user, masterAdmin, role, isPasswordAuth, navigate]);
 
   const isDenied = !loading && user && !masterAdmin && error;
 
