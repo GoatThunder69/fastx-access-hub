@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase, type ManagedPanel, type Broadcast, ALL_ENDPOINT_PATHS, ENDPOINTS, generateLicenseKey } from '@/lib/supabase';
+import { supabase, type ManagedPanel, type Broadcast, ALL_ENDPOINT_PATHS, ENDPOINTS, generateLicenseKey, generateSlug } from '@/lib/supabase';
 import CFMSLogo from '@/components/CFMSLogo';
 import LogsViewer from '@/components/admin/LogsViewer';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
