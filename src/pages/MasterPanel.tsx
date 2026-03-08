@@ -88,11 +88,55 @@ const MasterPanel = () => {
     if (tab === 'broadcasts') {
       supabase.from('broadcasts').select('*').order('created_at', { ascending: false }).limit(50).then(({ data }) => setBroadcasts(data || []));
     }
-    // Refresh endpoints when switching tabs or selecting panel details
     if (tab === 'panels' || tab === 'endpoints') {
       fetchAllEndpoints().then(setAllEndpoints);
     }
+    if (tab === 'admins') {
+      fetchAdmins();
+    }
   }, [tab, selectedPanel]);
+
+  const fetchAdmins = async () => {
+    setAdminsLoading(true);
+    const { data } = await supabase.from('master_admins').select('*').order('created_at', { ascending: false });
+    setAdmins(data || []);
+    setAdminsLoading(false);
+  };
+
+  const addAdmin = async () => {
+    if (!newAdminEmail.trim()) return;
+    setAddingAdmin(true);
+    const { error } = await supabase.from('master_admins').insert({
+      email: newAdminEmail.trim().toLowerCase(),
+      role: newAdminRole,
+      display_name: newAdminName.trim() || null,
+    });
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Admin Added', description: `${newAdminEmail.trim()} added as ${newAdminRole}` });
+      setNewAdminEmail(''); setNewAdminName(''); setNewAdminRole('monitor');
+    }
+    await fetchAdmins();
+    setAddingAdmin(false);
+  };
+
+  const removeAdmin = async (id: string, email: string) => {
+    if (email === user?.email) {
+      toast({ title: 'Error', description: 'You cannot remove yourself', variant: 'destructive' });
+      return;
+    }
+    if (!confirm(`Remove ${email} from master admins?`)) return;
+    await supabase.from('master_admins').delete().eq('id', id);
+    await fetchAdmins();
+    toast({ title: 'Admin Removed', description: email });
+  };
+
+  const updateAdminRole = async (id: string, newRole: string) => {
+    await supabase.from('master_admins').update({ role: newRole }).eq('id', id);
+    await fetchAdmins();
+    toast({ title: 'Role Updated' });
+  };
 
   const createPanel = async () => {
     if (!newName.trim()) return;
