@@ -498,6 +498,9 @@ const MasterPanel = () => {
           </div>
         )}
 
+        {/* ===== ENDPOINTS TAB ===== */}
+        {tab === 'endpoints' && <CustomEndpointManager />}
+
         {/* ===== LOGS TAB ===== */}
         {tab === 'logs' && <LogsViewer />}
 
