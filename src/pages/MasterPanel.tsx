@@ -39,6 +39,7 @@ const MasterPanel = () => {
   const [selectedPanel, setSelectedPanel] = useState<ManagedPanel | null>(null);
   const [detailTab, setDetailTab] = useState<'overview' | 'keys' | 'logs' | 'endpoints'>('overview');
   const [allEndpoints, setAllEndpoints] = useState(ENDPOINTS);
+  const [showProfile, setShowProfile] = useState(false);
 
   // Create panel form
   const [showCreate, setShowCreate] = useState(false);
