@@ -158,18 +158,18 @@ const MasterPanel = () => {
   return (
     <div className="min-h-screen pb-8">
       {/* Header */}
-      <header className="glass-strong sticky top-0 z-50 px-4 sm:px-6 py-3 flex items-center justify-between rounded-none border-x-0 border-t-0" style={{ borderColor: 'hsl(280 60% 50% / 0.15)' }}>
+      <header className="glass-strong sticky top-0 z-50 px-4 sm:px-6 py-3 flex items-center justify-between rounded-none border-x-0 border-t-0">
         <div className="flex items-center gap-3">
-          <CFMSLogo size={36} className="ring-2 ring-purple-400/20" />
+          <CFMSLogo size={36} className="ring-2 ring-primary/20" />
           <div>
             <span className="font-bold text-lg leading-none">CFMS</span>
-            <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wider align-middle" style={{ background: 'hsl(280 70% 50% / 0.15)', color: 'hsl(280 70% 60%)', border: '1px solid hsl(280 70% 50% / 0.25)' }}>MASTER</span>
+            <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wider align-middle bg-primary/15 text-primary border border-primary/25">MASTER</span>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="hidden sm:flex items-center gap-1.5 mr-2">
-            <Crown className="w-3.5 h-3.5" style={{ color: 'hsl(280 70% 60%)' }} />
-            <span className="text-[10px] font-medium" style={{ color: 'hsl(280 70% 60%)' }}>SUPREME</span>
+            <Crown className="w-3.5 h-3.5 text-primary" />
+            <span className="text-[10px] font-medium text-primary">SUPREME</span>
           </span>
           <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-sm transition-all">
             <LogOut className="w-4 h-4" />
@@ -186,8 +186,7 @@ const MasterPanel = () => {
             const isActive = tab === t.id;
             return (
               <button key={t.id} onClick={() => { setTab(t.id); setSelectedPanel(null); }}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-300 ${isActive ? 'text-purple-400 border border-purple-400/30' : 'text-muted-foreground border border-transparent hover:text-foreground hover:bg-secondary/50'}`}
-                style={isActive ? { background: 'hsl(280 70% 50% / 0.12)' } : {}}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-300 ${isActive ? 'text-primary border border-primary/30 bg-primary/10' : 'text-muted-foreground border border-transparent hover:text-foreground hover:bg-secondary/50'}`}
               >
                 <Icon className="w-4 h-4" /> {t.label}
               </button>
@@ -209,7 +208,7 @@ const MasterPanel = () => {
             </div>
 
             {/* Create Button */}
-            <button onClick={() => setShowCreate(!showCreate)} className="flex items-center gap-2 text-sm font-semibold rounded-lg px-5 py-2.5" style={{ background: 'linear-gradient(135deg, hsl(280 70% 50%), hsl(280 60% 40%))', color: 'white' }}>
+            <button onClick={() => setShowCreate(!showCreate)} className="btn-primary flex items-center gap-2 text-sm px-5 py-2.5">
               <Plus className="w-4 h-4" /> {showCreate ? 'Cancel' : 'Create New Panel'}
             </button>
 
@@ -407,7 +406,7 @@ const MasterPanel = () => {
         {tab === 'broadcasts' && (
           <div className="space-y-5 animate-in">
             <div className="glass-admin p-5 space-y-4 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-0.5" style={{ background: 'linear-gradient(90deg, transparent, hsl(280 70% 50%), transparent)' }} />
+              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent" />
               <h3 className="font-bold text-sm flex items-center gap-2"><SendIcon className="w-4 h-4 text-accent" /> Send Broadcast</h3>
               <div>
                 <label className="text-[10px] font-semibold text-muted-foreground tracking-wider mb-1.5 block">TARGET</label>
