@@ -320,7 +320,7 @@ const MasterPanel = () => {
                     </span>
                   </h2>
                   <p className="text-xs text-accent font-mono mt-1">{selectedPanel.master_license_key}</p>
-                  <p className="text-xs text-muted-foreground mt-1">URL: {window.location.origin}/panel/{selectedPanel.id}</p>
+                  <p className="text-xs text-muted-foreground mt-1">URL: {window.location.origin}/{selectedPanel.slug}</p>
                 </div>
                 <button onClick={() => togglePanel(selectedPanel)} className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedPanel.is_active ? 'bg-destructive/10 text-destructive hover:bg-destructive/20' : 'bg-success/10 text-success hover:bg-success/20'}`}>
                   {selectedPanel.is_active ? <><ToggleLeft className="w-4 h-4" /> Kill Switch</> : <><ToggleRight className="w-4 h-4" /> Enable</>}
