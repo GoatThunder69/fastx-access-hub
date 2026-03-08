@@ -12,7 +12,7 @@ type StatusFilter = 'all' | 'success' | 'error';
 
 const PAGE_SIZE = 25;
 
-const LogsViewer = () => {
+const LogsViewer = ({ panelId }: { panelId?: string } = {}) => {
   const [logs, setLogs] = useState<ApiLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -24,11 +24,13 @@ const LogsViewer = () => {
 
   const fetchLogs = async () => {
     setLoading(true);
-    const { data, error } = await supabase
+    let query = supabase
       .from('api_logs')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(1000);
+    if (panelId) query = query.eq('panel_id', panelId);
+    const { data, error } = await query;
     if (error) {
       toast({ title: 'Error', description: 'Failed to fetch logs', variant: 'destructive' });
     }

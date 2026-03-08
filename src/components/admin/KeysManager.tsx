@@ -13,7 +13,7 @@ type SortField = 'name' | 'created_at' | 'uses';
 type SortDir = 'asc' | 'desc';
 type FilterStatus = 'all' | 'active' | 'disabled' | 'expired';
 
-const KeysManager = () => {
+const KeysManager = ({ panelId }: { panelId?: string } = {}) => {
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
@@ -30,7 +30,9 @@ const KeysManager = () => {
 
   const fetchKeys = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('api_keys').select('*').order('created_at', { ascending: false });
+    let query = supabase.from('api_keys').select('*').order('created_at', { ascending: false });
+    if (panelId) query = query.eq('panel_id', panelId);
+    const { data, error } = await query;
     if (error) {
       console.error('Keys fetch error:', error);
       toast({ title: 'Error', description: 'Failed to fetch API keys', variant: 'destructive' });
@@ -93,6 +95,7 @@ const KeysManager = () => {
       key_value: val,
       expires_at: expiresAt || null,
       allowed_ips: allowedIps || null,
+      panel_id: panelId || null,
     });
     if (error) {
       toast({ title: 'Error', description: 'Failed to create key', variant: 'destructive' });

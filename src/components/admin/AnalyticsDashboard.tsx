@@ -14,14 +14,16 @@ interface RawLog {
   device: string | null;
 }
 
-const AnalyticsDashboard = () => {
+const AnalyticsDashboard = ({ panelId }: { panelId?: string } = {}) => {
   const [logs, setLogs] = useState<RawLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
 
   const fetchLogs = async () => {
     setLoading(true);
-    const { data } = await supabase.from('api_logs').select('endpoint, status, key_name, location, created_at, device');
+    let query = supabase.from('api_logs').select('endpoint, status, key_name, location, created_at, device');
+    if (panelId) query = query.eq('panel_id', panelId);
+    const { data } = await query;
     setLogs(data || []);
     setLoading(false);
   };
