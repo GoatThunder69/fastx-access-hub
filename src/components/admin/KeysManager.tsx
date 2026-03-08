@@ -13,7 +13,7 @@ type SortField = 'name' | 'created_at' | 'uses';
 type SortDir = 'asc' | 'desc';
 type FilterStatus = 'all' | 'active' | 'disabled' | 'expired';
 
-const KeysManager = () => {
+const KeysManager = ({ panelId }: { panelId?: string } = {}) => {
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
