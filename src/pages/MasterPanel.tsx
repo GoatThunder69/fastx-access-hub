@@ -194,13 +194,17 @@ const MasterPanel = () => {
           <CFMSLogo size={36} className="ring-2 ring-primary/20" />
           <div>
             <span className="font-bold text-lg leading-none">CFMS</span>
-            <span className="ml-2 text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wider align-middle bg-primary/15 text-primary border border-primary/25">MASTER</span>
+            {role && <span className={`ml-2 text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wider align-middle border ${ROLE_BADGE[role].color}`}>{ROLE_BADGE[role].label}</span>}
           </div>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="hidden sm:flex items-center gap-1.5 mr-2">
-            <Crown className="w-3.5 h-3.5 text-primary" />
-            <span className="text-[10px] font-medium text-primary">SUPREME</span>
+          <span className="hidden sm:flex items-center gap-2 mr-3">
+            {user?.user_metadata?.avatar_url ? (
+              <img src={user.user_metadata.avatar_url} className="w-6 h-6 rounded-full ring-1 ring-primary/20" alt="" />
+            ) : (
+              <UserCircle className="w-5 h-5 text-muted-foreground" />
+            )}
+            <span className="text-[11px] font-medium text-muted-foreground max-w-[150px] truncate">{masterAdmin?.display_name || user?.email}</span>
           </span>
           <button onClick={handleLogout} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-sm transition-all">
             <LogOut className="w-4 h-4" />
