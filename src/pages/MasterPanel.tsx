@@ -406,7 +406,7 @@ const MasterPanel = () => {
         {tab === 'broadcasts' && (
           <div className="space-y-5 animate-in">
             <div className="glass-admin p-5 space-y-4 relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-0.5" style={{ background: 'linear-gradient(90deg, transparent, hsl(280 70% 50%), transparent)' }} />
+              <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent" />
               <h3 className="font-bold text-sm flex items-center gap-2"><SendIcon className="w-4 h-4 text-accent" /> Send Broadcast</h3>
               <div>
                 <label className="text-[10px] font-semibold text-muted-foreground tracking-wider mb-1.5 block">TARGET</label>
