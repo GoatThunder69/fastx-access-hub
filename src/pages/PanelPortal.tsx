@@ -83,10 +83,10 @@ const PanelPortal = () => {
 
   const handleLogout = () => {
     if (panel) localStorage.removeItem(`cfms_portal_${panel.id}`);
-    localStorage.removeItem('fastx_key');
-    localStorage.removeItem('fastx_key_name');
-    localStorage.removeItem('fastx_key_id');
-    localStorage.removeItem('fastx_panel_id');
+    localStorage.removeItem('cfms_key');
+    localStorage.removeItem('cfms_key_name');
+    localStorage.removeItem('cfms_key_id');
+    localStorage.removeItem('cfms_panel_id');
     navigate(`/${slug}`);
   };
 
