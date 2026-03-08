@@ -410,14 +410,16 @@ const MasterPanel = () => {
                   </div>
                 </div>
 
-                {/* Change password inline */}
-                <div className="glass-admin p-4">
-                  <h4 className="text-sm font-bold mb-3 flex items-center gap-2"><Lock className="w-4 h-4 text-accent" /> Change Panel Password</h4>
-                  <div className="flex gap-2">
-                    <input value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="New password" className="input-admin flex-1 text-sm" />
-                    <button onClick={() => changePassword(selectedPanel.id)} disabled={!newPass.trim()} className="btn-admin text-xs px-4">Update</button>
+                {/* Change password inline - Full access only */}
+                {canChangePasswords && (
+                  <div className="glass-admin p-4">
+                    <h4 className="text-sm font-bold mb-3 flex items-center gap-2"><Lock className="w-4 h-4 text-accent" /> Change Panel Password</h4>
+                    <div className="flex gap-2">
+                      <input value={newPass} onChange={e => setNewPass(e.target.value)} placeholder="New password" className="input-admin flex-1 text-sm" />
+                      <button onClick={() => changePassword(selectedPanel.id)} disabled={!newPass.trim()} className="btn-admin text-xs px-4">Update</button>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             )}
 
