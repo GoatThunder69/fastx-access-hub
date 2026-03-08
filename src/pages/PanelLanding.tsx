@@ -76,10 +76,10 @@ const PanelLanding = () => {
 
       await supabase.from('api_keys').update({ uses: (data.uses || 0) + 1 }).eq('id', data.id);
       localStorage.setItem(`cfms_portal_${panel.id}`, 'true');
-      localStorage.setItem('fastx_key', data.key_value);
-      localStorage.setItem('fastx_key_name', data.name);
-      localStorage.setItem('fastx_key_id', data.id);
-      localStorage.setItem('fastx_panel_id', panel.id);
+      localStorage.setItem('cfms_key', data.key_value);
+      localStorage.setItem('cfms_key_name', data.name);
+      localStorage.setItem('cfms_key_id', data.id);
+      localStorage.setItem('cfms_panel_id', panel.id);
       navigate(`/${slug}/portal`);
     } catch (err: any) {
       setError(err.message || 'Connection error');

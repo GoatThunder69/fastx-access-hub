@@ -27,9 +27,9 @@ const PanelPortal = () => {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const keyName = localStorage.getItem('fastx_key_name') || 'User';
-  const keyId = localStorage.getItem('fastx_key_id');
-  const panelId = localStorage.getItem('fastx_panel_id');
+  const keyName = localStorage.getItem('cfms_key_name') || 'User';
+  const keyId = localStorage.getItem('cfms_key_id');
+  const panelId = localStorage.getItem('cfms_panel_id');
 
   useEffect(() => {
     if (!slug) return;
@@ -83,10 +83,10 @@ const PanelPortal = () => {
 
   const handleLogout = () => {
     if (panel) localStorage.removeItem(`cfms_portal_${panel.id}`);
-    localStorage.removeItem('fastx_key');
-    localStorage.removeItem('fastx_key_name');
-    localStorage.removeItem('fastx_key_id');
-    localStorage.removeItem('fastx_panel_id');
+    localStorage.removeItem('cfms_key');
+    localStorage.removeItem('cfms_key_name');
+    localStorage.removeItem('cfms_key_id');
+    localStorage.removeItem('cfms_panel_id');
     navigate(`/${slug}`);
   };
 

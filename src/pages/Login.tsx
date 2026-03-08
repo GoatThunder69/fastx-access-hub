@@ -11,7 +11,7 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const stored = localStorage.getItem('fastx_key');
+    const stored = localStorage.getItem('cfms_key');
     if (stored) navigate('/portal');
   }, [navigate]);
 
@@ -32,16 +32,16 @@ const Login = () => {
       if (data.expires_at && new Date(data.expires_at) < new Date()) { setError('This key has expired'); setLoading(false); return; }
 
       await supabase.from('api_keys').update({ uses: (data.uses || 0) + 1 }).eq('id', data.id);
-      localStorage.setItem('fastx_key', data.key_value);
-      localStorage.setItem('fastx_key_name', data.name);
-      localStorage.setItem('fastx_key_id', data.id);
+      localStorage.setItem('cfms_key', data.key_value);
+      localStorage.setItem('cfms_key_name', data.name);
+      localStorage.setItem('cfms_key_id', data.id);
 
       const { data: broadcasts } = await supabase.from('broadcasts').select('*').order('created_at', { ascending: false }).limit(1);
       if (broadcasts && broadcasts.length > 0) {
-        const lastSeen = localStorage.getItem('fastx_last_broadcast');
+        const lastSeen = localStorage.getItem('cfms_last_broadcast');
         if (lastSeen !== broadcasts[0].id) {
-          localStorage.setItem('fastx_broadcast', JSON.stringify(broadcasts[0]));
-          localStorage.setItem('fastx_last_broadcast', broadcasts[0].id);
+          localStorage.setItem('cfms_broadcast', JSON.stringify(broadcasts[0]));
+          localStorage.setItem('cfms_last_broadcast', broadcasts[0].id);
         }
       }
       navigate('/portal');
@@ -146,7 +146,7 @@ const Login = () => {
           </div>
           <div className="h-3 w-px bg-muted-foreground/10" />
           <p className="text-muted-foreground/30 text-[10px] tracking-[0.15em]">
-            AKSHU SECURITY PROTOCOL
+            CFMS SECURITY PROTOCOL
           </p>
           <div className="h-3 w-px bg-muted-foreground/10" />
           <div className="flex items-center gap-1.5 text-muted-foreground/30 text-[10px]">
