@@ -18,6 +18,7 @@ import {
 
 const TABS = [
   { id: 'panels', label: 'Panels', icon: Shield },
+  { id: 'endpoints', label: 'Endpoints', icon: Globe },
   { id: 'broadcasts', label: 'Broadcasts', icon: SendIcon },
   { id: 'logs', label: 'All Logs', icon: FileText },
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
