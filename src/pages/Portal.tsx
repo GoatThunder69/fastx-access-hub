@@ -14,6 +14,7 @@ const iconMap: Record<string, any> = {
 };
 
 const Portal = () => {
+  const [allEndpoints, setAllEndpoints] = useState(ENDPOINTS);
   const [selectedEndpoint, setSelectedEndpoint] = useState<typeof ENDPOINTS[0] | null>(null);
   const [query, setQuery] = useState('');
   const [result, setResult] = useState<any>(null);
@@ -30,6 +31,7 @@ const Portal = () => {
     if (!localStorage.getItem('fastx_key')) { navigate('/'); return; }
     const bc = localStorage.getItem('fastx_broadcast');
     if (bc) { setBroadcast(JSON.parse(bc)); localStorage.removeItem('fastx_broadcast'); }
+    fetchAllEndpoints().then(setAllEndpoints);
   }, [navigate]);
 
   const handleSearch = async () => {
