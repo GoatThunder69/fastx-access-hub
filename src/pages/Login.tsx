@@ -146,7 +146,7 @@ const Login = () => {
           </div>
           <div className="h-3 w-px bg-muted-foreground/10" />
           <p className="text-muted-foreground/30 text-[10px] tracking-[0.15em]">
-            AKSHU SECURITY PROTOCOL
+            CFMS SECURITY PROTOCOL
           </p>
           <div className="h-3 w-px bg-muted-foreground/10" />
           <div className="flex items-center gap-1.5 text-muted-foreground/30 text-[10px]">
