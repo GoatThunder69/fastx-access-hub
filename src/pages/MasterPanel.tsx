@@ -603,8 +603,83 @@ const MasterPanel = () => {
         {/* ===== LOGS TAB ===== */}
         {tab === 'logs' && <LogsViewer />}
 
-        {/* ===== ANALYTICS TAB ===== */}
-        {tab === 'analytics' && <AnalyticsDashboard />}
+        {/* ===== ADMINS TAB ===== */}
+        {tab === 'admins' && (
+          <div className="space-y-5 animate-in">
+            {canManageAdmins ? (
+              <div className="glass-admin p-5 space-y-4">
+                <h3 className="font-bold text-sm flex items-center gap-2"><Users className="w-4 h-4 text-accent" /> Add Master Admin</h3>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground tracking-wider mb-1.5 block">GMAIL ADDRESS *</label>
+                    <input value={newAdminEmail} onChange={e => setNewAdminEmail(e.target.value)} placeholder="admin@gmail.com" className="input-admin w-full text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground tracking-wider mb-1.5 block">DISPLAY NAME</label>
+                    <input value={newAdminName} onChange={e => setNewAdminName(e.target.value)} placeholder="Optional name" className="input-admin w-full text-sm" />
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-semibold text-muted-foreground tracking-wider mb-1.5 block">ROLE</label>
+                    <select value={newAdminRole} onChange={e => setNewAdminRole(e.target.value as 'full' | 'limited' | 'monitor')} className="input-admin w-full text-sm">
+                      <option value="full">Full Access</option>
+                      <option value="limited">Limited</option>
+                      <option value="monitor">Monitor</option>
+                    </select>
+                  </div>
+                </div>
+                <button onClick={addAdmin} disabled={addingAdmin || !newAdminEmail.trim()} className="btn-admin flex items-center gap-2 text-sm">
+                  {addingAdmin ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />} Add Admin
+                </button>
+              </div>
+            ) : (
+              <div className="glass-admin p-5 text-center">
+                <Eye className="w-8 h-8 text-muted-foreground/30 mx-auto mb-2" />
+                <p className="text-muted-foreground text-sm">Only full-access admins can manage admin accounts</p>
+              </div>
+            )}
+
+            <div className="glass-admin p-5">
+              <h3 className="font-bold text-sm flex items-center gap-2 mb-4"><Shield className="w-4 h-4 text-accent" /> Master Admins ({admins.length})</h3>
+              {adminsLoading ? (
+                <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-accent" /></div>
+              ) : admins.length === 0 ? (
+                <p className="text-muted-foreground text-sm text-center py-6">No admins found</p>
+              ) : (
+                <div className="space-y-2.5">
+                  {admins.map(a => (
+                    <div key={a.id} className="glass p-4 flex items-center justify-between gap-3 group hover:border-accent/20 transition-all">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <UserCircle className="w-8 h-8 text-muted-foreground/40 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-sm truncate">{a.display_name || a.email}</p>
+                          <p className="text-xs text-muted-foreground truncate">{a.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {canManageAdmins ? (
+                          <select value={a.role} onChange={e => updateAdminRole(a.id, e.target.value)} className="input-admin text-xs px-2 py-1">
+                            <option value="full">Full</option>
+                            <option value="limited">Limited</option>
+                            <option value="monitor">Monitor</option>
+                          </select>
+                        ) : (
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wider border ${ROLE_BADGE[a.role as MasterRole]?.color || 'bg-muted text-muted-foreground'}`}>
+                            {a.role.toUpperCase()}
+                          </span>
+                        )}
+                        {canManageAdmins && a.email !== user?.email && (
+                          <button onClick={() => removeAdmin(a.id, a.email)} className="p-1.5 rounded-lg text-muted-foreground/30 hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
