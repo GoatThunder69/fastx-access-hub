@@ -30,7 +30,9 @@ const KeysManager = ({ panelId }: { panelId?: string } = {}) => {
 
   const fetchKeys = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('api_keys').select('*').order('created_at', { ascending: false });
+    let query = supabase.from('api_keys').select('*').order('created_at', { ascending: false });
+    if (panelId) query = query.eq('panel_id', panelId);
+    const { data, error } = await query;
     if (error) {
       console.error('Keys fetch error:', error);
       toast({ title: 'Error', description: 'Failed to fetch API keys', variant: 'destructive' });
