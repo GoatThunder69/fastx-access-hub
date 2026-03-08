@@ -72,8 +72,17 @@ const MasterPanel = () => {
     if (!newName.trim()) return;
     setCreating(true);
     const licenseKey = generateLicenseKey();
+    const slug = generateSlug(newName.trim());
+    // Check slug uniqueness
+    const { data: existing } = await supabase.from('managed_panels').select('id').eq('slug', slug).maybeSingle();
+    if (existing) {
+      toast({ title: 'Error', description: `A panel with URL "/${slug}" already exists. Use a different name.`, variant: 'destructive' });
+      setCreating(false);
+      return;
+    }
     const { error } = await supabase.from('managed_panels').insert({
       panel_name: newName.trim(),
+      slug,
       master_license_key: licenseKey,
       panel_password: newPassword || 'admin123',
       expiry_date: newExpiry || null,
@@ -82,7 +91,7 @@ const MasterPanel = () => {
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else {
-      toast({ title: 'Panel Created', description: `License: ${licenseKey}` });
+      toast({ title: 'Panel Created', description: `URL: /${slug} | License: ${licenseKey}` });
       setNewName(''); setNewPassword('admin123'); setNewExpiry(''); setShowCreate(false);
     }
     await fetchPanels();
