@@ -6,6 +6,7 @@ import LogsViewer from '@/components/admin/LogsViewer';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import KeysManager from '@/components/admin/KeysManager';
 import CustomEndpointManager from '@/components/admin/CustomEndpointManager';
+import { useMasterAuth, type MasterRole } from '@/hooks/useMasterAuth';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
 import {
@@ -13,7 +14,7 @@ import {
   Settings, Send as SendIcon, BarChart3, FileText, Key,
   Loader2, RefreshCw, Copy, Eye, EyeOff, Lock,
   ArrowLeft, Shield, Activity, Globe, Clock, Users,
-  CheckSquare, Square, ChevronRight
+  CheckSquare, Square, ChevronRight, Pencil, UserCircle
 } from 'lucide-react';
 
 const TABS = [
