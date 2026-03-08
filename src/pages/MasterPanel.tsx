@@ -242,10 +242,12 @@ const MasterPanel = () => {
               <div className="glass-admin p-3.5"><p className="text-[10px] text-muted-foreground font-semibold tracking-wider mb-1">EXPIRED</p><p className="text-2xl font-extrabold text-destructive">{panels.filter(p => p.expiry_date && new Date(p.expiry_date) < new Date()).length}</p></div>
             </div>
 
-            {/* Create Button */}
-            <button onClick={() => setShowCreate(!showCreate)} className="btn-primary flex items-center gap-2 text-sm px-5 py-2.5">
-              <Plus className="w-4 h-4" /> {showCreate ? 'Cancel' : 'Create New Panel'}
-            </button>
+            {/* Create Button - Full access only */}
+            {canDelete && (
+              <button onClick={() => setShowCreate(!showCreate)} className="btn-primary flex items-center gap-2 text-sm px-5 py-2.5">
+                <Plus className="w-4 h-4" /> {showCreate ? 'Cancel' : 'Create New Panel'}
+              </button>
+            )}
 
             {/* Create Form */}
             {showCreate && (
