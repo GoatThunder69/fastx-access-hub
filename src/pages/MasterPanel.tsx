@@ -63,7 +63,7 @@ const MasterPanel = () => {
     setLoading(false);
   };
 
-  useEffect(() => { fetchPanels(); }, []);
+  useEffect(() => { fetchPanels(); fetchAllEndpoints().then(setAllEndpoints); }, []);
 
   useEffect(() => {
     if (tab === 'broadcasts') {
