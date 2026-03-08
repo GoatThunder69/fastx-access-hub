@@ -14,7 +14,7 @@ interface RawLog {
   device: string | null;
 }
 
-const AnalyticsDashboard = () => {
+const AnalyticsDashboard = ({ panelId }: { panelId?: string } = {}) => {
   const [logs, setLogs] = useState<RawLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>('all');
