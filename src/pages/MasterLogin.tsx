@@ -24,20 +24,16 @@ const MasterLogin = () => {
 
   const handlePasswordLogin = () => {
     const normalizedPassword = password.trim();
+    if (!normalizedPassword) return;
     const validMasterPasswords = [MASTER_PASSWORD.trim(), 'cfms7890'];
 
-    setPassLoading(true);
-    setPassError('');
-    setTimeout(() => {
-      if (validMasterPasswords.includes(normalizedPassword)) {
-        localStorage.setItem('cfms_master', 'true');
-        localStorage.setItem('cfms_master_role', 'full');
-        navigate('/master');
-      } else {
-        setPassError('Invalid master password');
-      }
-      setPassLoading(false);
-    }, 800);
+    if (validMasterPasswords.includes(normalizedPassword)) {
+      localStorage.setItem('cfms_master', 'true');
+      localStorage.setItem('cfms_master_role', 'full');
+      navigate('/master');
+    } else {
+      setPassError('Invalid master password');
+    }
   };
 
   return (
