@@ -27,9 +27,9 @@ const PanelPortal = () => {
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const keyName = localStorage.getItem('fastx_key_name') || 'User';
-  const keyId = localStorage.getItem('fastx_key_id');
-  const panelId = localStorage.getItem('fastx_panel_id');
+  const keyName = localStorage.getItem('cfms_key_name') || 'User';
+  const keyId = localStorage.getItem('cfms_key_id');
+  const panelId = localStorage.getItem('cfms_panel_id');
 
   useEffect(() => {
     if (!slug) return;
