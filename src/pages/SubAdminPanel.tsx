@@ -244,12 +244,7 @@ const SubAdminPanel = () => {
                     <span className="text-success font-semibold text-sm">All Systems Operational</span>
                   </div>
                   <div className="grid grid-cols-2 gap-3 mt-4">
-                    {[
-                      { name: 'Database', icon: Database, status: 'Online' },
-                      { name: 'API Gateway', icon: Globe, status: 'Online' },
-                      { name: 'Auth Service', icon: Lock, status: 'Online' },
-                      { name: 'Storage', icon: Server, status: 'Online' },
-                    ].map(s => (
+                    {HEALTH_SERVICES.map(s => (
                       <div key={s.name} className="glass p-4 flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
                           <s.icon className="w-5 h-5 text-success" />
