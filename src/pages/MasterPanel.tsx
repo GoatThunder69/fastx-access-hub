@@ -386,86 +386,89 @@ const MasterPanel = () => {
               />
 
               <div className="absolute right-0 top-full mt-3 z-50 origin-top-right profile-ticket-pop w-[min(20rem,calc(100vw-2rem))]">
-                <div className="profile-ticket shimmer-overlay">
-                  {/* Profile header */}
-                  <div className="relative px-6 pt-6 pb-5 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-primary/10 to-transparent" />
-                    <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary/10 blur-3xl" />
-                    <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-accent/10 blur-2xl" />
+                <div className="profile-ticket">
+                  <div className="shimmer-overlay">
+                    {/* Profile header */}
+                    <div className="relative px-6 pt-6 pb-5 overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-primary/10 to-transparent" />
+                      <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-primary/10 blur-3xl" />
+                      <div className="absolute -bottom-8 -left-8 w-24 h-24 rounded-full bg-accent/10 blur-2xl" />
 
-                    <div className="relative flex items-center gap-4">
-                      {user?.user_metadata?.avatar_url ? (
-                        <div className="relative">
-                          <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/60 to-primary/30 blur-sm opacity-80" />
-                          <img
-                            src={user.user_metadata.avatar_url}
-                            className="relative w-14 h-14 rounded-full ring-2 ring-primary/40 ring-offset-2 ring-offset-background"
-                            alt=""
-                          />
-                        </div>
-                      ) : (
-                        <div className="relative">
-                          <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/60 to-primary/30 blur-sm opacity-80" />
-                          <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-primary/25 to-primary/10 flex items-center justify-center ring-2 ring-primary/40 ring-offset-2 ring-offset-background">
-                            <span className="text-xl font-bold text-primary">
-                              {(masterAdmin?.display_name || user?.email || "A")[0].toUpperCase()}
-                            </span>
+                      <div className="relative flex items-center gap-4">
+                        {user?.user_metadata?.avatar_url ? (
+                          <div className="relative">
+                            <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/60 to-primary/30 blur-sm opacity-80" />
+                            <img
+                              src={user.user_metadata.avatar_url}
+                              className="relative w-14 h-14 rounded-full ring-2 ring-primary/40 ring-offset-2 ring-offset-background"
+                              alt=""
+                            />
                           </div>
-                        </div>
-                      )}
-
-                      <div className="min-w-0 flex-1">
-                        <p className="font-bold text-[15px] truncate">
-                          {masterAdmin?.display_name || (isPasswordAuth ? "Password Admin" : "Admin")}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate mt-0.5">
-                          {user?.email || (isPasswordAuth ? "Local authentication" : "")}
-                        </p>
-                        {role && (
-                          <span
-                            className={`inline-flex items-center mt-2 text-[10px] px-2.5 py-1 rounded-full font-semibold tracking-wider border ${ROLE_BADGE[role].color}`}
-                          >
-                            <Crown className="w-3 h-3 mr-1.5" />
-                            {ROLE_BADGE[role].label}
-                          </span>
+                        ) : (
+                          <div className="relative">
+                            <div className="absolute -inset-1 rounded-full bg-gradient-to-br from-primary/60 to-primary/30 blur-sm opacity-80" />
+                            <div className="relative w-14 h-14 rounded-full bg-gradient-to-br from-primary/25 to-primary/10 flex items-center justify-center ring-2 ring-primary/40 ring-offset-2 ring-offset-background">
+                              <span className="text-xl font-bold text-primary">
+                                {(masterAdmin?.display_name || user?.email || "A")[0].toUpperCase()}
+                              </span>
+                            </div>
+                          </div>
                         )}
+
+                        <div className="min-w-0 flex-1">
+                          <p className="font-bold text-[15px] truncate">
+                            {masterAdmin?.display_name || (isPasswordAuth ? "Password Admin" : "Admin")}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate mt-0.5">
+                            {user?.email || (isPasswordAuth ? "Local authentication" : "")}
+                          </p>
+                          {role && (
+                            <span
+                              className={`inline-flex items-center mt-2 text-[10px] px-2.5 py-1 rounded-full font-semibold tracking-wider border ${ROLE_BADGE[role].color}`}
+                            >
+                              <Crown className="w-3 h-3 mr-1.5" />
+                              {ROLE_BADGE[role].label}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Stats row */}
-                  <div className="glass-master px-6 py-4 rounded-none border-x-0 profile-ticket__perforation">
-                    <div className="grid grid-cols-3 gap-3">
-                      <div className="text-center">
-                        <p className="text-lg font-extrabold text-primary">{panels.length}</p>
-                        <p className="text-[10px] text-muted-foreground tracking-wider font-medium">PANELS</p>
-                      </div>
-                      <div className="text-center border-x border-border/30">
-                        <p className="text-lg font-extrabold text-success">{panels.filter(p => p.is_active).length}</p>
-                        <p className="text-[10px] text-muted-foreground tracking-wider font-medium">ACTIVE</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="text-lg font-extrabold text-accent">{isPasswordAuth && !user ? "PWD" : "OAuth"}</p>
-                        <p className="text-[10px] text-muted-foreground tracking-wider font-medium">AUTH</p>
+                    {/* Stats row */}
+                    <div className="glass-master px-6 py-4 rounded-none border-x-0 profile-ticket__perforation">
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="text-center">
+                          <p className="text-lg font-extrabold text-primary">{panels.length}</p>
+                          <p className="text-[10px] text-muted-foreground tracking-wider font-medium">PANELS</p>
+                        </div>
+                        <div className="text-center border-x border-border/30">
+                          <p className="text-lg font-extrabold text-success">{panels.filter(p => p.is_active).length}</p>
+                          <p className="text-[10px] text-muted-foreground tracking-wider font-medium">ACTIVE</p>
+                        </div>
+                        <div className="text-center">
+                          <p className="text-lg font-extrabold text-accent">{isPasswordAuth && !user ? "PWD" : "OAuth"}</p>
+                          <p className="text-[10px] text-muted-foreground tracking-wider font-medium">AUTH</p>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  {/* Logout */}
-                  <div className="glass-strong rounded-none border-x-0 border-b-0 px-6 py-4 profile-ticket__perforation">
-                    <button
-                      onClick={() => {
-                        setShowProfile(false);
-                        handleLogout();
-                      }}
-                      className="profile-ticket__logout w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-semibold text-destructive bg-destructive/8 hover:bg-destructive/15 border border-destructive/15 hover:border-destructive/30"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Sign Out
-                    </button>
+                    {/* Logout */}
+                    <div className="glass-strong rounded-none border-x-0 border-b-0 px-6 py-4 profile-ticket__perforation">
+                      <button
+                        onClick={() => {
+                          setShowProfile(false);
+                          handleLogout();
+                        }}
+                        className="profile-ticket__logout w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-sm font-semibold text-destructive bg-destructive/8 hover:bg-destructive/15 border border-destructive/15 hover:border-destructive/30"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Sign Out
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
+
             </>
           )}
         </div>
