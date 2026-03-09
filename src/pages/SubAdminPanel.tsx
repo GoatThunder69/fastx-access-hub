@@ -121,6 +121,17 @@ const SubAdminPanel = () => {
       toast({ title: 'Error', description: 'New password must be at least 4 characters', variant: 'destructive' });
       return;
     }
+    // Check password uniqueness
+    const { data: pwDup } = await supabase
+      .from('managed_panels')
+      .select('id')
+      .eq('panel_password', newPass.trim())
+      .neq('id', panelId)
+      .maybeSingle();
+    if (pwDup) {
+      toast({ title: 'Error', description: 'This password is already used by another panel. Choose a unique password.', variant: 'destructive' });
+      return;
+    }
     await supabase.from('managed_panels').update({ panel_password: newPass.trim() }).eq('id', panelId);
     setPanel({ ...panel, panel_password: newPass.trim() });
     setOldPass(''); setNewPass(''); setChangingPass(false);
