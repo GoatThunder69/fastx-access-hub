@@ -763,26 +763,39 @@ const MasterPanel = () => {
         {tab === 'broadcasts' && (
           <div className="space-y-5 animate-in">
             {canSendBroadcast ? (
-              <div className="glass-admin p-5 space-y-4 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-0.5 bg-gradient-to-r from-transparent via-primary to-transparent" />
-                <h3 className="font-bold text-sm flex items-center gap-2"><SendIcon className="w-4 h-4 text-accent" /> Send Broadcast</h3>
+              <div className="glass-admin p-6 space-y-5 relative overflow-hidden shimmer-overlay">
+                <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-accent to-transparent" />
+                <div className="absolute -top-20 -right-20 w-40 h-40 rounded-full bg-accent/5 blur-[80px]" />
+                
+                <h3 className="font-bold text-base flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center">
+                    <SendIcon className="w-4 h-4 text-accent" />
+                  </div>
+                  Send Broadcast
+                </h3>
+                
                 <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground tracking-wider mb-1.5 block">TARGET</label>
+                  <label className="text-[10px] font-semibold text-accent/70 tracking-[0.2em] mb-2 block flex items-center gap-1.5">
+                    <Globe className="w-3 h-3" /> TARGET
+                  </label>
                   <select value={bcTarget} onChange={e => setBcTarget(e.target.value)} className="input-admin w-full text-sm">
-                    <option value="all">All Panels (Global)</option>
-                    {panels.map(p => <option key={p.id} value={p.id}>{p.panel_name}</option>)}
+                    <option value="all">🌐 All Panels (Global)</option>
+                    {panels.map(p => <option key={p.id} value={p.id}>📋 {p.panel_name}</option>)}
                   </select>
                 </div>
+                
                 <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground tracking-wider mb-1.5 block">TITLE</label>
+                  <label className="text-[10px] font-semibold text-accent/70 tracking-[0.2em] mb-2 block">TITLE</label>
                   <input value={bcTitle} onChange={e => setBcTitle(e.target.value)} placeholder="e.g., Maintenance Notice" className="input-admin w-full text-sm" />
                 </div>
+                
                 <div>
-                  <label className="text-[10px] font-semibold text-muted-foreground tracking-wider mb-1.5 block">MESSAGE</label>
-                  <textarea value={bcMessage} onChange={e => setBcMessage(e.target.value)} placeholder="Enter broadcast message..." className="input-admin w-full min-h-[80px] resize-y text-sm" />
+                  <label className="text-[10px] font-semibold text-accent/70 tracking-[0.2em] mb-2 block">MESSAGE</label>
+                  <textarea value={bcMessage} onChange={e => setBcMessage(e.target.value)} placeholder="Enter broadcast message..." className="input-admin w-full min-h-[100px] resize-y text-sm leading-relaxed" />
                 </div>
-                <button onClick={sendBroadcast} disabled={bcSending || !bcTitle.trim() || !bcMessage.trim()} className="btn-admin flex items-center gap-2 text-sm">
-                  {bcSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendIcon className="w-4 h-4" />} Send
+                
+                <button onClick={sendBroadcast} disabled={bcSending || !bcTitle.trim() || !bcMessage.trim()} className="btn-admin flex items-center gap-2.5 text-sm px-6">
+                  {bcSending ? <Loader2 className="w-4 h-4 animate-spin" /> : <SendIcon className="w-4 h-4" />} Send Broadcast
                 </button>
               </div>
             ) : (
