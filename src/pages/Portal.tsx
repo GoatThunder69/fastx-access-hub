@@ -29,8 +29,10 @@ const Portal = () => {
 
   useEffect(() => {
     if (!localStorage.getItem('cfms_key')) { navigate('/'); return; }
-    const bc = localStorage.getItem('cfms_broadcast');
-    if (bc) { setBroadcast(JSON.parse(bc)); localStorage.removeItem('cfms_broadcast'); }
+    try {
+      const bc = localStorage.getItem('cfms_broadcast');
+      if (bc) { setBroadcast(JSON.parse(bc)); localStorage.removeItem('cfms_broadcast'); }
+    } catch { /* ignore malformed broadcast data */ }
     fetchAllEndpoints().then(setAllEndpoints);
   }, [navigate]);
 
