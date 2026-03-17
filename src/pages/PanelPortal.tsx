@@ -121,7 +121,7 @@ const PanelPortal = () => {
             Portal
           </span>
         </div>
-        <button onClick={handleLogout} className="p-2.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all group">
+        <button onClick={handleLogout} aria-label="Log out" className="p-2.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-all group">
           <LogOut className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
         </button>
       </header>
