@@ -795,8 +795,8 @@ const MasterPanel = () => {
                     <Globe className="w-3 h-3" /> TARGET
                   </label>
                   <select value={bcTarget} onChange={e => setBcTarget(e.target.value)} className="input-admin w-full text-sm">
-                    <option value="all">🌐 All Panels (Global)</option>
-                    {panels.map(p => <option key={p.id} value={p.id}>📋 {p.panel_name}</option>)}
+                    <option value="all">All Panels (Global)</option>
+                    {panels.map(p => <option key={p.id} value={p.id}>{p.panel_name}</option>)}
                   </select>
                 </div>
                 
