@@ -54,7 +54,8 @@ const PanelLanding = () => {
         return;
       }
 
-      await supabase.from("api_keys").update({ uses: (data.uses || 0) + 1 }).eq("id", data.id);
+      // Fire-and-forget usage increment - don't block navigation
+      supabase.from("api_keys").update({ uses: (data.uses || 0) + 1 }).eq("id", data.id).then(() => {});
 
       localStorage.setItem(`cfms_portal_${panel.id}`, "true");
       localStorage.setItem("cfms_key", data.key_value);
