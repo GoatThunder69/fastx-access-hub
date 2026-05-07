@@ -1,14 +1,23 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, type ManagedPanel, type Broadcast, ALL_ENDPOINT_PATHS, ENDPOINTS, fetchAllEndpoints, generateLicenseKey, generateSlug } from '@/lib/supabase';
 import CFMSLogo from '@/components/CFMSLogo';
-import LogsViewer from '@/components/admin/LogsViewer';
-import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
-import KeysManager from '@/components/admin/KeysManager';
-import CustomEndpointManager from '@/components/admin/CustomEndpointManager';
 import { useMasterAuth, type MasterRole } from '@/hooks/useMasterAuth';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+
+// Heavy admin tabs are split out so opening MasterPanel doesn't pull recharts
+// (~250 kB) and the full keys/logs editors. Each tab is fetched on first click.
+const LogsViewer            = lazy(() => import('@/components/admin/LogsViewer'));
+const AnalyticsDashboard    = lazy(() => import('@/components/admin/AnalyticsDashboard'));
+const KeysManager           = lazy(() => import('@/components/admin/KeysManager'));
+const CustomEndpointManager = lazy(() => import('@/components/admin/CustomEndpointManager'));
+
+const TabFallback = () => (
+  <div className="flex items-center justify-center py-16">
+    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+  </div>
+);
 import {
   Crown, LogOut, Plus, ToggleLeft, ToggleRight, Trash2,
   Settings, Send as SendIcon, BarChart3, FileText, Key,
@@ -770,8 +779,8 @@ const MasterPanel = () => {
               </div>
             )}
 
-            {detailTab === 'keys' && <KeysManager panelId={selectedPanel.id} />}
-            {detailTab === 'logs' && <LogsViewer panelId={selectedPanel.id} />}
+            {detailTab === 'keys' && <Suspense fallback={<TabFallback />}><KeysManager panelId={selectedPanel.id} /></Suspense>}
+            {detailTab === 'logs' && <Suspense fallback={<TabFallback />}><LogsViewer panelId={selectedPanel.id} /></Suspense>}
           </div>
         )}
 
@@ -872,13 +881,13 @@ const MasterPanel = () => {
         )}
 
         {/* ===== ENDPOINTS TAB ===== */}
-        {tab === 'endpoints' && <CustomEndpointManager />}
+        {tab === 'endpoints' && <Suspense fallback={<TabFallback />}><CustomEndpointManager /></Suspense>}
 
         {/* ===== LOGS TAB ===== */}
-        {tab === 'logs' && <LogsViewer />}
+        {tab === 'logs' && <Suspense fallback={<TabFallback />}><LogsViewer /></Suspense>}
 
         {/* ===== ANALYTICS TAB ===== */}
-        {tab === 'analytics' && <AnalyticsDashboard />}
+        {tab === 'analytics' && <Suspense fallback={<TabFallback />}><AnalyticsDashboard /></Suspense>}
 
         {/* ===== ADMINS TAB ===== */}
         {tab === 'admins' && (

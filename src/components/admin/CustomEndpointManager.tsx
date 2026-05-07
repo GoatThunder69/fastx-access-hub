@@ -1,8 +1,21 @@
 import { useState, useEffect } from 'react';
 import { supabase, ENDPOINTS, AVAILABLE_ICONS, type CustomEndpoint } from '@/lib/supabase';
-import { Plus, Trash2, Loader2, RefreshCw, Globe, Search } from 'lucide-react';
-import * as LucideIcons from 'lucide-react';
+import {
+  Plus, Trash2, Loader2, RefreshCw, Globe, Search,
+  Smartphone, Fingerprint, Mail, FileText, Send, Building2,
+  CreditCard, Wallet, CircleDollarSign, Car, FileCheck, Flame, Truck,
+  Shield, User, Key, Database, Server, Cpu, Hash,
+  type LucideIcon,
+} from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+
+// Static map of the icons exposed in AVAILABLE_ICONS. Importing the full
+// `lucide-react` namespace pulled in ~760 kB (135 kB gzip) of unused icons.
+const ICON_MAP: Record<string, LucideIcon> = {
+  Smartphone, Fingerprint, Mail, FileText, Send, Building2,
+  CreditCard, Wallet, CircleDollarSign, Car, Search, FileCheck,
+  Flame, Truck, Globe, Shield, User, Key, Database, Server, Cpu, Hash,
+};
 
 const CustomEndpointManager = () => {
   const [endpoints, setEndpoints] = useState<CustomEndpoint[]>([]);
@@ -74,7 +87,7 @@ const CustomEndpointManager = () => {
   };
 
   const getIcon = (iconName: string) => {
-    const IconComp = (LucideIcons as any)[iconName];
+    const IconComp = ICON_MAP[iconName];
     return IconComp ? <IconComp className="w-4 h-4" /> : <Search className="w-4 h-4" />;
   };
 

@@ -1,13 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { supabase, type ManagedPanel } from '@/lib/supabase';
 import CFMSLogo from '@/components/CFMSLogo';
-import KeysManager from '@/components/admin/KeysManager';
-import LogsViewer from '@/components/admin/LogsViewer';
-import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import AlertBanner from '@/components/AlertBanner';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+
+// Heavy admin tabs are split out so SubAdminPanel doesn't pull recharts
+// (~250 kB) before the user clicks the Analytics tab.
+const KeysManager        = lazy(() => import('@/components/admin/KeysManager'));
+const LogsViewer         = lazy(() => import('@/components/admin/LogsViewer'));
+const AnalyticsDashboard = lazy(() => import('@/components/admin/AnalyticsDashboard'));
 import {
   Key, FileText, BarChart3, Heart, ClipboardCheck,
   LogOut, Shield, Loader2, Lock, ArrowLeft,
@@ -224,9 +227,11 @@ const SubAdminPanel = () => {
       </div>
 
       <div className="px-4 sm:px-6" role="tabpanel" id={`tabpanel-${tab}`}>
-        {tab === 'keys' && panelId && <KeysManager panelId={panelId} />}
-        {tab === 'logs' && panelId && <LogsViewer panelId={panelId} />}
-        {tab === 'analytics' && panelId && <AnalyticsDashboard panelId={panelId} />}
+        <Suspense fallback={<div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-accent" /></div>}>
+          {tab === 'keys' && panelId && <KeysManager panelId={panelId} />}
+          {tab === 'logs' && panelId && <LogsViewer panelId={panelId} />}
+          {tab === 'analytics' && panelId && <AnalyticsDashboard panelId={panelId} />}
+        </Suspense>
 
         {tab === 'health' && (
           <div className="space-y-4 animate-in">

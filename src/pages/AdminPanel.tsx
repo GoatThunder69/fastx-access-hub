@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CFMSLogo from '@/components/CFMSLogo';
-import KeysManager from '@/components/admin/KeysManager';
-import LogsViewer from '@/components/admin/LogsViewer';
-import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import { supabase, type Broadcast } from '@/lib/supabase';
+
+// Heavy admin tabs are split out so AdminPanel doesn't pull recharts +
+// the full keys/logs editors on first load.
+const KeysManager        = lazy(() => import('@/components/admin/KeysManager'));
+const LogsViewer         = lazy(() => import('@/components/admin/LogsViewer'));
+const AnalyticsDashboard = lazy(() => import('@/components/admin/AnalyticsDashboard'));
 import {
   Key, FileText, BarChart3, Heart, ClipboardCheck, Send as SendIcon,
   LogOut, Bell, Shield, Loader2, RefreshCw, Wifi, WifiOff, Activity,
@@ -148,9 +151,11 @@ const AdminPanel = () => {
 
       {/* Content */}
       <div className="px-4 sm:px-6">
-        {tab === 'keys' && <KeysManager />}
-        {tab === 'logs' && <LogsViewer />}
-        {tab === 'analytics' && <AnalyticsDashboard />}
+        <Suspense fallback={<div className="flex items-center justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-accent" /></div>}>
+          {tab === 'keys' && <KeysManager />}
+          {tab === 'logs' && <LogsViewer />}
+          {tab === 'analytics' && <AnalyticsDashboard />}
+        </Suspense>
 
         {tab === 'health' && (
           <div className="space-y-4 animate-in">
