@@ -21,11 +21,15 @@ const AnalyticsDashboard = ({ panelId }: { panelId?: string } = {}) => {
 
   const fetchLogs = async () => {
     setLoading(true);
-    let query = supabase.from('api_logs').select('endpoint, status, key_name, location, created_at, device');
-    if (panelId) query = query.eq('panel_id', panelId);
-    const { data } = await query;
-    setLogs(data || []);
-    setLoading(false);
+    try {
+      let query = supabase.from('api_logs').select('endpoint, status, key_name, location, created_at, device');
+      if (panelId) query = query.eq('panel_id', panelId);
+      const { data, error } = await query;
+      if (error) console.error('Analytics fetch error:', error);
+      setLogs(data || []);
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchLogs(); }, []);

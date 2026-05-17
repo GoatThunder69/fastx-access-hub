@@ -47,8 +47,13 @@ const AlertBanner = ({ panelId }: AlertBannerProps) => {
   }, [panelId]);
 
   useEffect(() => {
-    const stored = localStorage.getItem(`cfms_dismissed_${panelId}`);
-    if (stored) setDismissed(new Set(JSON.parse(stored)));
+    try {
+      const stored = localStorage.getItem(`cfms_dismissed_${panelId}`);
+      if (stored) setDismissed(new Set(JSON.parse(stored)));
+    } catch {
+      // Corrupted localStorage — start fresh
+      localStorage.removeItem(`cfms_dismissed_${panelId}`);
+    }
   }, [panelId]);
 
   const dismiss = (id: string) => {

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, type MutableRefObject } from 'react';
 import { supabase } from '@/lib/supabase';
 import type { User } from '@supabase/supabase-js';
 
@@ -37,19 +37,34 @@ function isValidRole(role: string | null): role is MasterRole {
 }
 
 export function useMasterAuth() {
-  const [state, setState] = useState<MasterAuthState>({
-    user: null,
-    masterAdmin: null,
-    role: null,
-    loading: true,
-    error: null,
+  const [state, setState] = useState<MasterAuthState>(() => {
+    // Fast path: if the user already has a valid cached session (password-auth),
+    // start with loading:false so the panel renders immediately without waiting
+    // for the async getSession() network round-trip.
+    const cached =
+      typeof window !== 'undefined' &&
+      localStorage.getItem('cfms_master') === 'true' &&
+      isValidRole(localStorage.getItem('cfms_master_role') as string);
+    return { user: null, masterAdmin: null, role: null, loading: !cached, error: null };
   });
   const initialized = useRef(false);
 
-  const processUser = useCallback(async (user: User | null) => {
+  const processUser = useCallback(async (
+    user: User | null,
+    ignoreRef?: MutableRefObject<boolean>,
+  ) => {
     if (user) {
-      setState(s => ({ ...s, loading: true, error: null }));
+      // Only block the UI with a loading spinner if there is no cached auth yet.
+      // For background re-verification (e.g. Google OAuth token refresh) we skip
+      // setting loading:true so the already-visible panel is not hidden.
+      const hasCached =
+        typeof window !== 'undefined' && localStorage.getItem('cfms_master') === 'true';
+      if (!hasCached) {
+        setState(s => ({ ...s, loading: true, error: null }));
+      }
       const { data, error } = await checkMasterAdmin(user.email);
+      // If the component unmounted while the DB call was in-flight, bail out.
+      if (ignoreRef?.current) return;
       if (error) {
         setState({ user, masterAdmin: null, role: null, loading: false, error: 'Failed to verify admin status' });
       } else if (!data) {
@@ -65,24 +80,26 @@ export function useMasterAuth() {
     }
   }, []);
 
+  const ignoreRef = useRef(false);
+
   useEffect(() => {
-    let ignore = false;
+    ignoreRef.current = false;
 
     // 1. Check existing session first
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (ignore) return;
+      if (ignoreRef.current) return;
       initialized.current = true;
-      await processUser(session?.user ?? null);
+      await processUser(session?.user ?? null, ignoreRef);
     });
 
     // 2. Listen for future auth changes (sign-in, sign-out, token refresh)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!initialized.current) return; // Skip until getSession completes
-      await processUser(session?.user ?? null);
+      await processUser(session?.user ?? null, ignoreRef);
     });
 
     return () => {
-      ignore = true;
+      ignoreRef.current = true;
       subscription.unsubscribe();
     };
   }, [processUser]);

@@ -35,7 +35,7 @@ const AdminPanel = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!localStorage.getItem('cfmsadmin')) navigate('/admin-login');
+    if (!localStorage.getItem('cfms_admin')) navigate('/admin-login');
   }, [navigate]);
 
   useEffect(() => {
@@ -65,7 +65,7 @@ const AdminPanel = () => {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('fcfmsadmin');
+    localStorage.removeItem('cfms_admin');
     navigate('/admin-login');
   };
 

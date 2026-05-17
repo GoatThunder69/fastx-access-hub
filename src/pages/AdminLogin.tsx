@@ -11,17 +11,16 @@ const AdminLogin = () => {
   const navigate = useNavigate();
 
   const handleLogin = () => {
+    if (!password) return;
     setLoading(true);
     setError('');
-    setTimeout(() => {
-      if (password === ADMIN_PASSWORD) {
-        localStorage.setItem('cfms_admin', 'true');
-        navigate('/admin');
-      } else {
-        setError('Invalid admin password');
-      }
+    if (password === ADMIN_PASSWORD) {
+      localStorage.setItem('cfms_admin', 'true');
+      navigate('/admin');
+    } else {
+      setError('Invalid admin password');
       setLoading(false);
-    }, 600);
+    }
   };
 
   return (

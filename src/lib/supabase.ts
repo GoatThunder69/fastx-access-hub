@@ -127,24 +127,23 @@ export async function fetchAllEndpoints(): Promise<typeof ENDPOINTS> {
 
 export function generateKey(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  const bytes = new Uint8Array(24);
+  crypto.getRandomValues(bytes);
   let result = 'ak_';
   for (let i = 0; i < 24; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+    result += chars[bytes[i] % chars.length];
   }
   return result;
 }
 
 export function generateLicenseKey(): string {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  const segments = [];
-  for (let s = 0; s < 4; s++) {
-    let seg = '';
-    for (let i = 0; i < 4; i++) {
-      seg += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    segments.push(seg);
-  }
-  return 'DRMS-' + segments.join('-');
+  const genSegment = () => {
+    const bytes = new Uint8Array(4);
+    crypto.getRandomValues(bytes);
+    return Array.from(bytes).map(b => chars[b % chars.length]).join('');
+  };
+  return 'DRMS-' + [genSegment(), genSegment(), genSegment(), genSegment()].join('-');
 }
 
 export function getDeviceInfo(): string {
