@@ -42,21 +42,20 @@ export const usePanelLanding = (slug: string | undefined): UsePanelLandingResult
 
       const slugLower = slug.toLowerCase();
 
-      const { data, error } = await supabase
-        .from("managed_panels")
-        .select("*")
-        .eq("slug", slugLower)
-        .single();
+      const { data, error } = await supabase.rpc("get_panel_by_slug", { p_slug: slugLower });
 
       if (cancelled) return;
 
-      if (error || !data) {
+      const row = Array.isArray(data) ? data[0] : data;
+      if (error || !row) {
         setNotFound(true);
         setLoading(false);
         return;
       }
 
-      setPanel(data);
+      // get_panel_by_slug intentionally omits master_license_key + panel_password.
+      // Cast to ManagedPanel; sensitive fields stay undefined client-side.
+      setPanel(row as ManagedPanel);
 
       const expired = data.expiry_date && new Date(data.expiry_date) < new Date();
       const isDisabled = !data.is_active || Boolean(expired);

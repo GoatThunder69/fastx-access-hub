@@ -16,6 +16,8 @@ const AdminLogin = () => {
     setError('');
     if (password === ADMIN_PASSWORD) {
       localStorage.setItem('cfms_admin', 'true');
+      // adminApi helper reads this to call admin_* RPCs server-side
+      localStorage.setItem('cfms_admin_pwd', password);
       navigate('/admin');
     } else {
       setError('Invalid admin password');

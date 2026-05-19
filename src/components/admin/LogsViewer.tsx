@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase, type ApiLog } from '@/lib/supabase';
+import { type ApiLog } from '@/lib/supabase';
+import { listLogs, resolveAuth } from '@/lib/adminApi';
 import {
   FileText, RefreshCw, Loader2, Monitor, MapPin,
   Search, Filter, ChevronLeft, ChevronRight, Download, X
@@ -24,17 +25,13 @@ const LogsViewer = ({ panelId }: { panelId?: string } = {}) => {
 
   const fetchLogs = async () => {
     setLoading(true);
-    let query = supabase
-      .from('api_logs')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(1000);
-    if (panelId) query = query.eq('panel_id', panelId);
-    const { data, error } = await query;
-    if (error) {
-      toast({ title: 'Error', description: 'Failed to fetch logs', variant: 'destructive' });
+    try {
+      const data = await listLogs(resolveAuth(panelId), 1000);
+      setLogs(data || []);
+    } catch (err) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to fetch logs', variant: 'destructive' });
+      setLogs([]);
     }
-    setLogs(data || []);
     setLoading(false);
   };
 

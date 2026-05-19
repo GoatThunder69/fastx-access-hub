@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase, generateKey, type ApiKey } from '@/lib/supabase';
+import { generateKey, type ApiKey } from '@/lib/supabase';
+import { listKeys, createKey as apiCreateKey, toggleKey as apiToggleKey, deleteKey as apiDeleteKey, resolveAuth } from '@/lib/adminApi';
 import {
   Plus, RefreshCw, Key, Copy, Trash2, Eye, EyeOff,
   Clock, Globe, Loader2, ToggleLeft, ToggleRight,
@@ -30,18 +31,16 @@ const KeysManager = ({ panelId }: { panelId?: string } = {}) => {
 
   const fetchKeys = async () => {
     setLoading(true);
-    let query = supabase.from('api_keys').select('*').order('created_at', { ascending: false });
-    if (panelId) query = query.eq('panel_id', panelId);
-    const { data, error } = await query;
-    if (error) {
-      console.error('Keys fetch error:', error);
-      toast({ title: 'Error', description: 'Failed to fetch API keys', variant: 'destructive' });
+    try {
+      const data = await listKeys(resolveAuth(panelId));
+      setKeys((data || []).filter(k => k.key_value));
+    } catch (err) {
+      console.error('Keys fetch error:', err);
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to fetch API keys', variant: 'destructive' });
       setKeys([]);
+    } finally {
       setLoading(false);
-      return;
     }
-    setKeys((data || []).filter((k: any) => k.key_value));
-    setLoading(false);
   };
 
   useEffect(() => { fetchKeys(); }, []);
@@ -83,40 +82,37 @@ const KeysManager = ({ panelId }: { panelId?: string } = {}) => {
       toast({ title: 'Validation Error', description: 'Key name is required', variant: 'destructive' });
       return;
     }
-    // Check duplicate names globally in DB
-    const { data: existingKey } = await supabase
-      .from('api_keys')
-      .select('id, name')
-      .ilike('name', name.trim())
-      .maybeSingle();
-    if (existingKey) {
-      toast({ title: 'Duplicate Name', description: `A key named "${existingKey.name}" already exists. Delete it first before creating a new one.`, variant: 'destructive' });
+    // Duplicate check is enforced server-side by the RPC; do a fast client-side
+    // check against the already-loaded list for nicer UX.
+    if (keys.some(k => k.name.toLowerCase() === name.trim().toLowerCase())) {
+      toast({ title: 'Duplicate Name', description: `A key named "${name.trim()}" already exists.`, variant: 'destructive' });
       return;
     }
     setCreating(true);
     const val = keyValue.trim() || generateKey();
-    const { error } = await supabase.from('api_keys').insert({
-      name: name.trim(),
-      key_value: val,
-      expires_at: expiresAt || null,
-      allowed_ips: allowedIps || null,
-      panel_id: panelId || null,
-    });
-    if (error) {
-      toast({ title: 'Error', description: 'Failed to create key', variant: 'destructive' });
-    } else {
+    try {
+      await apiCreateKey(resolveAuth(panelId), {
+        name: name.trim(),
+        key_value: val,
+        expires_at: expiresAt || null,
+        allowed_ips: allowedIps || null,
+        panel_id: panelId || null,
+      });
       toast({ title: 'Key Created', description: `"${name.trim()}" has been created successfully` });
       setName(''); setKeyValue(''); setExpiresAt(''); setAllowedIps('');
       setShowCreateForm(false);
+    } catch (err) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to create key', variant: 'destructive' });
     }
     await fetchKeys();
     setCreating(false);
   };
 
   const toggleKey = async (id: string, currentState: boolean) => {
-    const { error } = await supabase.from('api_keys').update({ is_active: !currentState }).eq('id', id);
-    if (error) {
-      toast({ title: 'Error', description: 'Failed to toggle key', variant: 'destructive' });
+    try {
+      await apiToggleKey(resolveAuth(panelId), id, !currentState);
+    } catch (err) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to toggle key', variant: 'destructive' });
       return;
     }
     setKeys(keys.map(k => k.id === id ? { ...k, is_active: !currentState } : k));
@@ -125,9 +121,10 @@ const KeysManager = ({ panelId }: { panelId?: string } = {}) => {
 
   const deleteKey = async (id: string) => {
     if (!confirm('Delete this key permanently? This action cannot be undone.')) return;
-    const { error } = await supabase.from('api_keys').delete().eq('id', id);
-    if (error) {
-      toast({ title: 'Error', description: 'Failed to delete key', variant: 'destructive' });
+    try {
+      await apiDeleteKey(resolveAuth(panelId), id);
+    } catch (err) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to delete key', variant: 'destructive' });
       return;
     }
     setKeys(keys.filter(k => k.id !== id));

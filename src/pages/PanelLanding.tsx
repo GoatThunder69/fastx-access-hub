@@ -34,33 +34,23 @@ const PanelLanding = () => {
     setError("");
 
     try {
-      const { data, error: dbError } = await supabase
-        .from("api_keys")
-        .select("*")
-        .eq("key_value", key.trim())
-        .eq("is_active", true)
-        .eq("panel_id", panel.id)
-        .maybeSingle();
-
+      // RPC validates + atomically increments uses, scoped to this panel
+      const { data, error: dbError } = await supabase.rpc("validate_panel_access_key", {
+        p_key: key.trim(),
+        p_panel_id: panel.id,
+      });
       if (dbError) throw dbError;
-      if (!data) {
-        setError("Invalid or inactive access key");
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) {
+        setError("Invalid, inactive, or expired access key");
         setLoginLoading(false);
         return;
       }
-      if (data.expires_at && new Date(data.expires_at) < new Date()) {
-        setError("This key has expired");
-        setLoginLoading(false);
-        return;
-      }
-
-      // Fire-and-forget usage increment - don't block navigation
-      supabase.from("api_keys").update({ uses: (data.uses || 0) + 1 }).eq("id", data.id).then(() => {});
 
       localStorage.setItem(`cfms_portal_${panel.id}`, "true");
-      localStorage.setItem("cfms_key", data.key_value);
-      localStorage.setItem("cfms_key_name", data.name);
-      localStorage.setItem("cfms_key_id", data.id);
+      localStorage.setItem("cfms_key", row.key_value);
+      localStorage.setItem("cfms_key_name", row.name);
+      localStorage.setItem("cfms_key_id", row.id);
       localStorage.setItem("cfms_panel_id", panel.id);
 
       navigate(`/${slug}/portal`);
@@ -71,21 +61,32 @@ const PanelLanding = () => {
     }
   };
 
-  const handleAdminLogin = () => {
+  const handleAdminLogin = async () => {
     if (!password || !panel) return;
 
     setLoginLoading(true);
     setError("");
 
-    setTimeout(() => {
-      if (password === panel.panel_password) {
+    try {
+      // Server-side verification — panel_password is no longer exposed to anon
+      const { data, error: rpcErr } = await supabase.rpc("verify_panel_password", {
+        p_panel_id: panel.id,
+        p_password: password,
+      });
+      if (rpcErr) throw rpcErr;
+      if (data === true) {
         localStorage.setItem(`cfms_panel_${panel.id}`, "true");
+        // adminApi helper reads this to call panel_admin_* RPCs server-side
+        localStorage.setItem(`cfms_panel_pwd_${panel.id}`, password);
         navigate(`/${slug}/admin`);
       } else {
         setError("Invalid panel password");
       }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Connection error");
+    } finally {
       setLoginLoading(false);
-    }, 500);
+    }
   };
 
   if (loading) {

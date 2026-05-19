@@ -1,7 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import CFMSLogo from '@/components/CFMSLogo';
-import { supabase, checkSupabaseHealth, type Broadcast } from '@/lib/supabase';
+import { checkSupabaseHealth, type Broadcast } from '@/lib/supabase';
+import { listBroadcasts, createBroadcast, deleteBroadcast, resolveAuth } from '@/lib/adminApi';
 
 // Heavy admin tabs are split out so AdminPanel doesn't pull recharts +
 // the full keys/logs editors on first load.
@@ -40,7 +41,7 @@ const AdminPanel = () => {
 
   useEffect(() => {
     if (tab === 'broadcast') {
-      supabase.from('broadcasts').select('*').order('created_at', { ascending: false }).then(({ data }) => setBroadcasts(data || []));
+      listBroadcasts(resolveAuth()).then(setBroadcasts).catch(() => setBroadcasts([]));
     }
     if (tab === 'health') {
       setHealthOk(null);
@@ -51,21 +52,24 @@ const AdminPanel = () => {
   const sendBroadcast = async () => {
     if (!bcTitle.trim() || !bcMessage.trim()) return;
     setBcSending(true);
-    await supabase.from('broadcasts').insert({ title: bcTitle.trim(), message: bcMessage.trim() });
-    setBcTitle(''); setBcMessage('');
-    const { data } = await supabase.from('broadcasts').select('*').order('created_at', { ascending: false });
-    setBroadcasts(data || []);
+    try {
+      await createBroadcast(resolveAuth(), bcTitle.trim(), bcMessage.trim());
+      setBcTitle(''); setBcMessage('');
+      const data = await listBroadcasts(resolveAuth());
+      setBroadcasts(data);
+    } catch { /* ignore; user can retry */ }
     setBcSending(false);
   };
 
-  const deleteBroadcast = async (id: string) => {
+  const deleteBroadcastById = async (id: string) => {
     if (!confirm('Delete this broadcast?')) return;
-    await supabase.from('broadcasts').delete().eq('id', id);
+    try { await deleteBroadcast(resolveAuth(), id); } catch { return; }
     setBroadcasts(broadcasts.filter(b => b.id !== id));
   };
 
   const handleLogout = () => {
     localStorage.removeItem('cfms_admin');
+    localStorage.removeItem('cfms_admin_pwd');
     navigate('/admin-login');
   };
 
@@ -281,7 +285,7 @@ const AdminPanel = () => {
                 <h3 className="font-bold flex items-center gap-2 text-sm">
                   <SendIcon className="w-4 h-4 text-accent" /> Broadcasts ({broadcasts.length})
                 </h3>
-                <button onClick={() => supabase.from('broadcasts').select('*').order('created_at', { ascending: false }).then(({ data }) => setBroadcasts(data || []))} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+                <button onClick={() => listBroadcasts(resolveAuth()).then(setBroadcasts).catch(() => {})} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
                   <RefreshCw className="w-3 h-3" /> Refresh
                 </button>
               </div>
@@ -304,7 +308,7 @@ const AdminPanel = () => {
                           </p>
                         </div>
                         <button
-                          onClick={() => deleteBroadcast(b.id)}
+                          onClick={() => deleteBroadcastById(b.id)}
                           className="p-1.5 rounded-lg text-muted-foreground/40 hover:text-destructive hover:bg-destructive/10 transition-all opacity-0 group-hover:opacity-100"
                         >
                           <Trash2 className="w-3.5 h-3.5" />

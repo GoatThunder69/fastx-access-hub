@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/lib/supabase';
+import { listLogs, resolveAuth } from '@/lib/adminApi';
 import { BarChart3, Loader2, TrendingUp, Users, MapPin, Clock, RefreshCw } from 'lucide-react';
 import { subDays, subHours, isAfter, format, startOfDay } from 'date-fns';
 
@@ -22,11 +22,19 @@ const AnalyticsDashboard = ({ panelId }: { panelId?: string } = {}) => {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      let query = supabase.from('api_logs').select('endpoint, status, key_name, location, created_at, device');
-      if (panelId) query = query.eq('panel_id', panelId);
-      const { data, error } = await query;
-      if (error) console.error('Analytics fetch error:', error);
-      setLogs(data || []);
+      const data = await listLogs(resolveAuth(panelId), 1000);
+      // Project only the fields the dashboard needs
+      setLogs((data || []).map(l => ({
+        endpoint: l.endpoint,
+        status: l.status,
+        key_name: l.key_name,
+        location: l.location,
+        created_at: l.created_at,
+        device: l.device,
+      })));
+    } catch (err) {
+      console.error('Analytics fetch error:', err);
+      setLogs([]);
     } finally {
       setLoading(false);
     }

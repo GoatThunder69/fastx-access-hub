@@ -42,28 +42,26 @@ const Portal = () => {
     const ep = selectedEndpoint.endpoint;
     const q = query.trim();
     const url = `${API_BASE}${ep}?${selectedEndpoint.param}=${encodeURIComponent(q)}`;
-    try {
-      // Only the actual upstream call gates the UI. Geo lookup + log insert
-      // happen after we've already shown the result so the user doesn't pay
-      // for the (up to 4 s) ipapi round-trip on every search.
-      const res = await fetch(url);
-      const data = await res.json();
-      setResult(data);
-      const status = res.ok ? 'success' : 'error';
-      void getGeoInfo().then(geo => supabase.from('api_logs').insert({
-        key_id: keyId, key_name: keyName, endpoint: ep,
-        query: q, status,
-        device: getDeviceInfo(), user_agent: navigator.userAgent,
-        ip_address: geo.ip, location: geo.location,
+
+    const logCall = (status: 'success' | 'error') => {
+      void getGeoInfo().then(geo => supabase.rpc('log_api_call', {
+        p_key_id: keyId, p_key_name: keyName, p_endpoint: ep, p_query: q,
+        p_status: status, p_device: getDeviceInfo(), p_user_agent: navigator.userAgent,
+        p_ip: geo.ip, p_location: geo.location, p_panel_id: null,
       }));
+    };
+
+    try {
+      // 20 s upstream timeout — was unbounded, causing UI to hang on dead providers
+      const res = await fetch(url, { signal: AbortSignal.timeout(20_000) });
+      let data: unknown = null;
+      try { data = await res.json(); } catch { data = { raw: await res.text().catch(() => '') }; }
+      setResult(data);
+      if (!res.ok) setError(`Upstream returned HTTP ${res.status}`);
+      logCall(res.ok ? 'success' : 'error');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Request failed');
-      void getGeoInfo().then(geo => supabase.from('api_logs').insert({
-        key_id: keyId, key_name: keyName, endpoint: ep,
-        query: q, status: 'error',
-        device: getDeviceInfo(), user_agent: navigator.userAgent,
-        ip_address: geo.ip, location: geo.location,
-      }));
+      logCall('error');
     } finally { setLoading(false); }
   };
 

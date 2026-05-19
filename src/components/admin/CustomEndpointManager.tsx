@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { supabase, ENDPOINTS, AVAILABLE_ICONS, type CustomEndpoint } from '@/lib/supabase';
+import { ENDPOINTS, AVAILABLE_ICONS, type CustomEndpoint } from '@/lib/supabase';
+import { listCustomEndpoints, createCustomEndpoint, deleteCustomEndpoint, resolveAuth } from '@/lib/adminApi';
 import {
   Plus, Trash2, Loader2, RefreshCw, Globe, Search,
   Smartphone, Fingerprint, Mail, FileText, Send, Building2,
@@ -31,12 +32,14 @@ const CustomEndpointManager = () => {
 
   const fetchEndpoints = async () => {
     setLoading(true);
-    const { data, error } = await supabase.from('custom_endpoints').select('*').order('created_at', { ascending: false });
-    if (error) {
-      console.error('Custom endpoints fetch error:', error);
-      toast({ title: 'Error', description: 'Failed to fetch custom endpoints. Make sure the table exists.', variant: 'destructive' });
+    try {
+      const data = await listCustomEndpoints();
+      setEndpoints(data);
+    } catch (err) {
+      console.error('Custom endpoints fetch error:', err);
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to fetch custom endpoints', variant: 'destructive' });
+      setEndpoints([]);
     }
-    setEndpoints(data || []);
     setLoading(false);
   };
 
@@ -58,18 +61,18 @@ const CustomEndpointManager = () => {
     }
 
     setCreating(true);
-    const { error } = await supabase.from('custom_endpoints').insert({
-      endpoint: path,
-      param: param.trim(),
-      label: label.trim(),
-      icon,
-    });
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
+    try {
+      await createCustomEndpoint(resolveAuth(), {
+        endpoint: path,
+        param: param.trim(),
+        label: label.trim(),
+        icon,
+      });
       toast({ title: 'Endpoint Created', description: `"${label.trim()}" (${path}) added successfully` });
       setLabel(''); setEndpoint('/'); setParam(''); setIcon('Search');
       setShowForm(false);
+    } catch (err) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to create endpoint', variant: 'destructive' });
     }
     await fetchEndpoints();
     setCreating(false);
@@ -77,9 +80,10 @@ const CustomEndpointManager = () => {
 
   const deleteEndpoint = async (id: string, name: string) => {
     if (!confirm(`Delete custom endpoint "${name}"? This cannot be undone.`)) return;
-    const { error } = await supabase.from('custom_endpoints').delete().eq('id', id);
-    if (error) {
-      toast({ title: 'Error', description: 'Failed to delete endpoint', variant: 'destructive' });
+    try {
+      await deleteCustomEndpoint(resolveAuth(), id);
+    } catch (err) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to delete endpoint', variant: 'destructive' });
       return;
     }
     setEndpoints(endpoints.filter(e => e.id !== id));

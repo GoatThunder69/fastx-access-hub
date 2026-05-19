@@ -20,29 +20,24 @@ const Login = () => {
     setLoading(true);
     setError('');
     try {
-      const { data, error: dbError } = await supabase
-        .from('api_keys')
-        .select('*')
-        .eq('key_value', key.trim())
-        .eq('is_active', true)
-        .maybeSingle();
-
+      // RPC validates + atomically increments uses, returns null if invalid/expired/disabled
+      const { data, error: dbError } = await supabase.rpc('validate_access_key', { p_key: key.trim() });
       if (dbError) throw dbError;
-      if (!data) { setError('Invalid or inactive access key'); setLoading(false); return; }
-      if (data.expires_at && new Date(data.expires_at) < new Date()) { setError('This key has expired'); setLoading(false); return; }
+      const row = Array.isArray(data) ? data[0] : data;
+      if (!row) { setError('Invalid, inactive, or expired access key'); setLoading(false); return; }
 
-      localStorage.setItem('cfms_key', data.key_value);
-      localStorage.setItem('cfms_key_name', data.name);
-      localStorage.setItem('cfms_key_id', data.id);
+      localStorage.setItem('cfms_key', row.key_value);
+      localStorage.setItem('cfms_key_name', row.name);
+      localStorage.setItem('cfms_key_id', row.id);
 
-      // Fire-and-forget: don't block navigation on these
-      supabase.from('api_keys').update({ uses: (data.uses || 0) + 1 }).eq('id', data.id).then(() => {});
-      supabase.from('broadcasts').select('*').order('created_at', { ascending: false }).limit(1).then(({ data: broadcasts }) => {
-        if (broadcasts && broadcasts.length > 0) {
+      // Fire-and-forget broadcast pull
+      supabase.rpc('get_latest_broadcast', { p_panel_id: null }).then(({ data: bData }) => {
+        const bc = Array.isArray(bData) ? bData[0] : bData;
+        if (bc) {
           const lastSeen = localStorage.getItem('cfms_last_broadcast');
-          if (lastSeen !== broadcasts[0].id) {
-            localStorage.setItem('cfms_broadcast', JSON.stringify(broadcasts[0]));
-            localStorage.setItem('cfms_last_broadcast', broadcasts[0].id);
+          if (lastSeen !== bc.id) {
+            localStorage.setItem('cfms_broadcast', JSON.stringify(bc));
+            localStorage.setItem('cfms_last_broadcast', bc.id);
           }
         }
       });

@@ -55,20 +55,22 @@ const SubAdminPanel = () => {
     if (!slug) return;
     const fetchPanel = async () => {
       setLoading(true);
-      const { data, error } = await supabase.from('managed_panels').select('*').eq('slug', slug.toLowerCase()).single();
-      if (error || !data) {
+      const { data, error } = await supabase.rpc('get_panel_by_slug', { p_slug: slug.toLowerCase() });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (error || !row) {
         navigate(`/${slug}`);
         return;
       }
-      setPanel(data);
-      setPanelId(data.id);
+      // get_panel_by_slug intentionally omits master_license_key + panel_password
+      setPanel(row as ManagedPanel);
+      setPanelId(row.id);
       // Check if panel is active and not expired
-      const expired = data.expiry_date && new Date(data.expiry_date) < new Date();
-      if (!data.is_active || expired) {
+      const expired = row.expiry_date && new Date(row.expiry_date) < new Date();
+      if (!row.is_active || expired) {
         setDisabled(true);
       }
       // Check localStorage for existing session
-      const storedAuth = localStorage.getItem(`cfms_panel_${data.id}`);
+      const storedAuth = localStorage.getItem(`cfms_panel_${row.id}`);
       if (storedAuth === 'true') {
         setAuthenticated(true);
       } else {
@@ -80,31 +82,28 @@ const SubAdminPanel = () => {
     fetchPanel();
   }, [slug, navigate]);
 
-  // Real-time kill switch
+  // Kill switch — RLS lockdown blocks anon realtime, so poll every 30s using
+  // the anon-safe get_panel_by_slug RPC.
   useEffect(() => {
-    if (!panelId) return;
-    const channel = supabase
-      .channel(`panel-status-${panelId}`)
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'managed_panels',
-        filter: `id=eq.${panelId}`,
-      }, (payload) => {
-        const updated = payload.new as ManagedPanel;
-        setPanel(updated);
-        const expired = updated.expiry_date && new Date(updated.expiry_date) < new Date();
-        if (!updated.is_active || expired) {
-          setDisabled(true);
-          toast({ title: 'Panel Disabled', description: 'This panel has been deactivated by the Master Admin.', variant: 'destructive' });
-        } else {
-          setDisabled(false);
-        }
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [panelId]);
+    if (!panelId || !slug) return;
+    let cancelled = false;
+    const check = async () => {
+      const { data } = await supabase.rpc('get_panel_by_slug', { p_slug: slug.toLowerCase() });
+      const row = Array.isArray(data) ? data[0] : data;
+      if (cancelled || !row) return;
+      const updated = row as ManagedPanel;
+      setPanel(prev => prev ? { ...prev, ...updated } : updated);
+      const expired = updated.expiry_date && new Date(updated.expiry_date) < new Date();
+      if (!updated.is_active || expired) {
+        setDisabled(true);
+        toast({ title: 'Panel Disabled', description: 'This panel has been deactivated by the Master Admin.', variant: 'destructive' });
+      } else {
+        setDisabled(false);
+      }
+    };
+    const id = setInterval(check, 30_000);
+    return () => { cancelled = true; clearInterval(id); };
+  }, [panelId, slug]);
 
   // Health check with timeout
   useEffect(() => {
@@ -116,35 +115,32 @@ const SubAdminPanel = () => {
   }, [tab, authenticated]);
 
   const handleLogout = () => {
-    if (panelId) localStorage.removeItem(`cfms_panel_${panelId}`);
+    if (panelId) {
+      localStorage.removeItem(`cfms_panel_${panelId}`);
+      localStorage.removeItem(`cfms_panel_pwd_${panelId}`);
+    }
     navigate(`/${slug}`);
   };
 
   const handleChangePassword = async () => {
     if (!panel || !panelId) return;
-    if (oldPass !== panel.panel_password) {
-      toast({ title: 'Error', description: 'Current password is incorrect', variant: 'destructive' });
-      return;
-    }
     if (!newPass.trim() || newPass.length < 4) {
       toast({ title: 'Error', description: 'New password must be at least 4 characters', variant: 'destructive' });
       return;
     }
-    // Check password uniqueness
-    const { data: pwDup } = await supabase
-      .from('managed_panels')
-      .select('id')
-      .eq('panel_password', newPass.trim())
-      .neq('id', panelId)
-      .maybeSingle();
-    if (pwDup) {
-      toast({ title: 'Error', description: 'This password is already used by another panel. Choose a unique password.', variant: 'destructive' });
-      return;
+    try {
+      const { changePanelPassword } = await import('@/lib/adminApi');
+      const ok = await changePanelPassword(panelId, oldPass, newPass.trim());
+      if (!ok) {
+        toast({ title: 'Error', description: 'Password change rejected', variant: 'destructive' });
+        return;
+      }
+      // panel_password is no longer client-readable; keep panel state consistent without it
+      setOldPass(''); setNewPass(''); setChangingPass(false);
+      toast({ title: 'Password Updated', description: 'Your panel password has been changed' });
+    } catch (err) {
+      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to change password', variant: 'destructive' });
     }
-    await supabase.from('managed_panels').update({ panel_password: newPass.trim() }).eq('id', panelId);
-    setPanel({ ...panel, panel_password: newPass.trim() });
-    setOldPass(''); setNewPass(''); setChangingPass(false);
-    toast({ title: 'Password Updated', description: 'Your panel password has been changed' });
   };
 
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-accent" /></div>;

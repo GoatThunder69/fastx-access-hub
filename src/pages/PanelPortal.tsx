@@ -34,12 +34,13 @@ const PanelPortal = () => {
   useEffect(() => {
     if (!slug) return;
     const init = async () => {
-      const [{ data }, endpoints] = await Promise.all([
-        supabase.from('managed_panels').select('*').eq('slug', slug.toLowerCase()).single(),
+      const [{ data: panelRows }, endpoints] = await Promise.all([
+        supabase.rpc('get_panel_by_slug', { p_slug: slug.toLowerCase() }),
         fetchAllEndpoints(),
       ]);
+      const data = Array.isArray(panelRows) ? panelRows[0] : panelRows;
       if (!data) { navigate(`/${slug}`); return; }
-      setPanel(data);
+      setPanel(data as ManagedPanel);
       setAllEndpoints(endpoints);
 
       const storedPortal = localStorage.getItem(`cfms_portal_${data.id}`);
@@ -63,25 +64,25 @@ const PanelPortal = () => {
     const q = query.trim();
     const url = `${API_BASE}${ep}?${selectedEndpoint.param}=${encodeURIComponent(q)}`;
     const pid = panel.id;
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      setResult(data);
-      const status = res.ok ? 'success' : 'error';
-      void getGeoInfo().then(geo => supabase.from('api_logs').insert({
-        key_id: keyId, key_name: keyName, endpoint: ep,
-        query: q, status,
-        device: getDeviceInfo(), user_agent: navigator.userAgent,
-        panel_id: pid, ip_address: geo.ip, location: geo.location,
+
+    const logCall = (status: 'success' | 'error') => {
+      void getGeoInfo().then(geo => supabase.rpc('log_api_call', {
+        p_key_id: keyId, p_key_name: keyName, p_endpoint: ep, p_query: q,
+        p_status: status, p_device: getDeviceInfo(), p_user_agent: navigator.userAgent,
+        p_ip: geo.ip, p_location: geo.location, p_panel_id: pid,
       }));
+    };
+
+    try {
+      const res = await fetch(url, { signal: AbortSignal.timeout(20_000) });
+      let data: unknown = null;
+      try { data = await res.json(); } catch { data = { raw: await res.text().catch(() => '') }; }
+      setResult(data);
+      if (!res.ok) setError(`Upstream returned HTTP ${res.status}`);
+      logCall(res.ok ? 'success' : 'error');
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'Request failed');
-      void getGeoInfo().then(geo => supabase.from('api_logs').insert({
-        key_id: keyId, key_name: keyName, endpoint: ep,
-        query: q, status: 'error',
-        device: getDeviceInfo(), user_agent: navigator.userAgent,
-        panel_id: pid, ip_address: geo.ip, location: geo.location,
-      }));
+      logCall('error');
     } finally { setSearchLoading(false); }
   };
 

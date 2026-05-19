@@ -11,39 +11,19 @@ const AlertBanner = ({ panelId }: AlertBannerProps) => {
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
 
   useEffect(() => {
+    let cancelled = false;
     const fetchBroadcasts = async () => {
-      const { data } = await supabase
-        .from('broadcasts')
-        .select('*')
-        .or(`target_panel_id.eq.${panelId},target_panel_id.is.null`)
-        .order('created_at', { ascending: false })
-        .limit(5);
-      setBroadcasts(data || []);
+      // RPC returns the latest broadcast matching (panelId, null target).
+      // We poll every 30 s as a replacement for the realtime subscription
+      // because RLS now blocks anon realtime payloads on broadcasts.
+      const { data } = await supabase.rpc('get_latest_broadcast', { p_panel_id: panelId });
+      if (cancelled) return;
+      const row = Array.isArray(data) ? data[0] : data;
+      setBroadcasts(row ? [row as Broadcast] : []);
     };
     fetchBroadcasts();
-
-    const channel = supabase
-      .channel(`broadcasts-${panelId}`)
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'broadcasts',
-      }, (payload) => {
-        const newBroadcast = payload.new as Broadcast;
-        if (!newBroadcast.target_panel_id || newBroadcast.target_panel_id === panelId) {
-          setBroadcasts(prev => [newBroadcast, ...prev].slice(0, 5));
-        }
-      })
-      .on('postgres_changes', {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'broadcasts',
-      }, (payload) => {
-        setBroadcasts(prev => prev.filter(b => b.id !== (payload.old as any).id));
-      })
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
+    const intervalId = window.setInterval(fetchBroadcasts, 30_000);
+    return () => { cancelled = true; window.clearInterval(intervalId); };
   }, [panelId]);
 
   useEffect(() => {
