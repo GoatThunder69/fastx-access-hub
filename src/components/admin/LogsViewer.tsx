@@ -26,8 +26,10 @@ const LogsViewer = ({ panelId }: { panelId?: string } = {}) => {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const data = await listLogs(resolveAuth(panelId), 1000);
-      setLogs(data || []);
+      const data = await listLogs(resolveAuth(panelId), 1000, panelId);
+      // Defence-in-depth: if master mode returned cross-panel data, isolate here.
+      const isolated = panelId ? (data || []).filter(l => l.panel_id === panelId) : (data || []);
+      setLogs(isolated);
     } catch (err) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to fetch logs', variant: 'destructive' });
       setLogs([]);

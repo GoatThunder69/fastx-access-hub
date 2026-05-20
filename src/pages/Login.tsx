@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import CFMSLogo from '@/components/CFMSLogo';
+import Starfield from '@/components/Starfield';
 import { Key, Shield, Loader2, Sparkles, ArrowRight, Zap } from 'lucide-react';
 
 const Login = () => {
@@ -55,7 +56,8 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute inset-0 dot-grid opacity-30" />
+      <Starfield />
+      <div className="absolute inset-0 dot-grid opacity-20" />
       <div className="absolute top-1/4 -left-32 w-80 h-80 rounded-full bg-primary/5 blur-[120px] animate-float" />
       <div className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full bg-primary/8 blur-[120px] animate-float" style={{ animationDelay: '2s' }} />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full bg-primary/3 blur-[160px]" />

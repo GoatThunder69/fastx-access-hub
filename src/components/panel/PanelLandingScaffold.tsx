@@ -1,4 +1,5 @@
 import type { PropsWithChildren } from "react";
+import Starfield from "@/components/Starfield";
 
 type PanelLandingScaffoldProps = PropsWithChildren<{
   variant?: "default" | "disabled";
@@ -8,6 +9,7 @@ const PanelLandingScaffold = ({ variant = "default", children }: PanelLandingSca
   if (variant === "disabled") {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+        <Starfield />
         <div className="absolute inset-0 dot-grid opacity-10" />
         {children}
       </div>
@@ -16,7 +18,8 @@ const PanelLandingScaffold = ({ variant = "default", children }: PanelLandingSca
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute inset-0 dot-grid opacity-30" />
+      <Starfield />
+      <div className="absolute inset-0 dot-grid opacity-20" />
       <div className="absolute top-1/4 -left-32 w-80 h-80 rounded-full bg-primary/5 blur-[120px] animate-float" />
       <div
         className="absolute bottom-1/4 -right-32 w-80 h-80 rounded-full bg-primary/8 blur-[120px] animate-float"

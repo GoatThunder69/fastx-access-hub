@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { supabase, API_BASE, ENDPOINTS, fetchAllEndpoints, getDeviceInfo, getGeoInfo, type ManagedPanel } from '@/lib/supabase';
 import CFMSLogo from '@/components/CFMSLogo';
 import AlertBanner from '@/components/AlertBanner';
+import Starfield from '@/components/Starfield';
 import {
   Smartphone, Fingerprint, Mail, FileText, Send, Building2,
   CreditCard, Wallet, CircleDollarSign, Car, Search, FileCheck, Flame, Truck,
@@ -111,7 +112,8 @@ const PanelPortal = () => {
 
   return (
     <div className="min-h-screen pb-12 relative">
-      <div className="fixed inset-0 dot-grid opacity-20 pointer-events-none" />
+      <Starfield />
+      <div className="fixed inset-0 dot-grid opacity-15 pointer-events-none" />
       <div className="fixed top-0 -left-32 w-96 h-96 rounded-full bg-primary/[0.04] blur-[120px] pointer-events-none" />
       <div className="fixed bottom-0 -right-32 w-96 h-96 rounded-full bg-accent/[0.03] blur-[120px] pointer-events-none" />
 

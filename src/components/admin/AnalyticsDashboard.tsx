@@ -22,9 +22,11 @@ const AnalyticsDashboard = ({ panelId }: { panelId?: string } = {}) => {
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const data = await listLogs(resolveAuth(panelId), 1000);
+      const data = await listLogs(resolveAuth(panelId), 1000, panelId);
+      // Defence-in-depth: if master mode returned cross-panel data, isolate here.
+      const isolated = panelId ? (data || []).filter(l => l.panel_id === panelId) : (data || []);
       // Project only the fields the dashboard needs
-      setLogs((data || []).map(l => ({
+      setLogs(isolated.map(l => ({
         endpoint: l.endpoint,
         status: l.status,
         key_name: l.key_name,

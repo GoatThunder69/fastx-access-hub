@@ -137,13 +137,17 @@ export async function deleteKey(auth: AdminAuth, id: string): Promise<void> {
 
 // ------- api_logs -------
 
-export async function listLogs(auth: AdminAuth, limit = 1000): Promise<ApiLog[]> {
+// panelFilter scopes master-mode queries to a single panel so a master admin
+// viewing a specific panel's admin page cannot see other panels' logs.
+export async function listLogs(auth: AdminAuth, limit = 1000, panelFilter?: string | null): Promise<ApiLog[]> {
   if (auth.mode === 'master') {
-    const { data, error } = await supabase
+    let query = supabase
       .from('api_logs')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(limit);
+    if (panelFilter) query = query.eq('panel_id', panelFilter);
+    const { data, error } = await query;
     if (error) throw error;
     return data || [];
   }
