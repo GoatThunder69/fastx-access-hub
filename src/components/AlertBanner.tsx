@@ -12,18 +12,29 @@ const AlertBanner = ({ panelId }: AlertBannerProps) => {
 
   useEffect(() => {
     let cancelled = false;
+    let controller = new AbortController();
+
     const fetchBroadcasts = async () => {
-      // RPC returns the latest broadcast matching (panelId, null target).
-      // We poll every 30 s as a replacement for the realtime subscription
-      // because RLS now blocks anon realtime payloads on broadcasts.
-      const { data } = await supabase.rpc('get_latest_broadcast', { p_panel_id: panelId });
-      if (cancelled) return;
-      const row = Array.isArray(data) ? data[0] : data;
-      setBroadcasts(row ? [row as Broadcast] : []);
+      // Abort any prior in-flight request before starting a new one.
+      controller.abort();
+      controller = new AbortController();
+      try {
+        const { data } = await supabase.rpc('get_latest_broadcast', { p_panel_id: panelId });
+        if (cancelled) return;
+        const row = Array.isArray(data) ? data[0] : data;
+        setBroadcasts(row ? [row as Broadcast] : []);
+      } catch {
+        // Ignore network errors; next poll will retry.
+      }
     };
+
     fetchBroadcasts();
     const intervalId = window.setInterval(fetchBroadcasts, 30_000);
-    return () => { cancelled = true; window.clearInterval(intervalId); };
+    return () => {
+      cancelled = true;
+      controller.abort();
+      window.clearInterval(intervalId);
+    };
   }, [panelId]);
 
   useEffect(() => {

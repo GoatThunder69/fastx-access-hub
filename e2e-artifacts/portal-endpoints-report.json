@@ -1,0 +1,242 @@
+[
+  {
+    "label": "Mobile Lookup",
+    "endpoint": "/mobile",
+    "param": "number",
+    "sample": "9999999999",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/mobile?number=9999999999",
+    "upstreamStatus": 503,
+    "upstreamMs": -1779186788056,
+    "upstreamOk": false,
+    "responsePreview": "{\"error\":\"Service temporarily unavailable\",\"message\":\"Upstream error: 502\",\"endpoint\":\"/mobile\"}",
+    "uiError": "Upstream returned HTTP 503",
+    "uiShowedResult": true,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 503 ()"
+    ],
+    "failedRequests": [],
+    "notes": []
+  },
+  {
+    "label": "Aadhaar Lookup",
+    "endpoint": "/aadhaar",
+    "param": "id",
+    "sample": "999999999999",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/aadhaar?id=999999999999",
+    "upstreamStatus": 200,
+    "upstreamMs": -1779186790839,
+    "upstreamOk": true,
+    "responsePreview": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"NAME\": \"MRS  BHAWAN PAHUJA\",\n      \"fname\": \"Sharwan Kumar\",\n      \"ADDRESS\": \"H NO-150/21  STREET NO-2! !MADAN PURI!GURGAON NCR!HARYANA!122001\",\n      \"circle\": \"VI DELHI\",\n      \"MOBILE\": \"9999874300\",\n      \"alt\": \"9871644918\",\n      \"id\": \"999999999999\",\n      \"email\": \"MANOCHAPRATEEK87@ROCKETMAIL.COM\"\n    },\n    {\n      \"NAME\": \"MRS  MEENA  \",\n   ",
+    "uiError": null,
+    "uiShowedResult": true,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "notes": []
+  },
+  {
+    "label": "Email Lookup",
+    "endpoint": "/email",
+    "param": "address",
+    "sample": "playwright-test@example.com",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/email?address=playwright-test%40example.com",
+    "upstreamStatus": 503,
+    "upstreamMs": -1779186803142,
+    "upstreamOk": false,
+    "responsePreview": "{\"error\":\"Service temporarily unavailable\",\"message\":\"Upstream error: 403\",\"endpoint\":\"/email\"}",
+    "uiError": "Upstream returned HTTP 503",
+    "uiShowedResult": true,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 503 ()"
+    ],
+    "failedRequests": [],
+    "notes": []
+  },
+  {
+    "label": "GST Lookup",
+    "endpoint": "/gst",
+    "param": "number",
+    "sample": "27AAPFU0939F1ZV",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/gst?number=27AAPFU0939F1ZV",
+    "upstreamStatus": 200,
+    "upstreamMs": -1779186804905,
+    "upstreamOk": true,
+    "responsePreview": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Requested data is not available\",\n    \"data\": []\n  },\n  \"source\": \"/gst\",\n  \"input\": \"27AAPFU0939F1ZV\",\n  \"proxy\": \"Netlify Functions\",\n  \"timestamp\": \"2026-05-19T10:33:29.031Z\"\n}",
+    "uiError": null,
+    "uiShowedResult": true,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "notes": []
+  },
+  {
+    "label": "Telegram Lookup",
+    "endpoint": "/telegram",
+    "param": "user",
+    "sample": "playwright_test_user",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/telegram?user=playwright_test_user",
+    "upstreamStatus": 503,
+    "upstreamMs": -1779186820486,
+    "upstreamOk": false,
+    "responsePreview": "{\"error\":\"Service temporarily unavailable\",\"message\":\"Upstream error: 500\",\"endpoint\":\"/telegram\"}",
+    "uiError": "Upstream returned HTTP 503",
+    "uiShowedResult": true,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 503 ()"
+    ],
+    "failedRequests": [],
+    "notes": []
+  },
+  {
+    "label": "IFSC Lookup",
+    "endpoint": "/ifsc",
+    "param": "code",
+    "sample": "SBIN0000001",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/ifsc?code=SBIN0000001",
+    "upstreamStatus": 200,
+    "upstreamMs": -1779186824429,
+    "upstreamOk": true,
+    "responsePreview": "{\n  \"success\": true,\n  \"data\": {\n    \"MICR\": \"700002021\",\n    \"BRANCH\": \"KOLKATA MAIN\",\n    \"ADDRESS\": \"SAMRIDDHI BHAWAN, 1 STRAND ROAD, KOLKATA 700 001\",\n    \"STATE\": \"WEST BENGAL\",\n    \"CONTACT\": \"\",\n    \"UPI\": true,\n    \"RTGS\": true,\n    \"CITY\": \"KOLKATA\",\n    \"CENTRE\": \"KOLKATA\",\n    \"DISTRICT\": \"KOLKATA\",\n    \"NEFT\": true,\n    \"IMPS\": true,\n    \"SWIFT\": null,\n    \"ISO3166\": \"IN-WB\",\n    \"BANK",
+    "uiError": null,
+    "uiShowedResult": true,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "notes": []
+  },
+  {
+    "label": "Ration Card Lookup",
+    "endpoint": "/rashan",
+    "param": "aadhaar",
+    "sample": "999999999999",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/rashan?aadhaar=999999999999",
+    "upstreamStatus": 200,
+    "upstreamMs": -1779186836880,
+    "upstreamOk": true,
+    "responsePreview": "{\n  \"success\": true,\n  \"data\": {\n    \"details\": {\n      \"card_info\": {\n        \"Address\": \"71-??????????,??????-695506\",\n        \"Card Type\": \"PHH\",\n        \"District\": \"THIRUVANANTHAPURAM\",\n        \"Home FPS\": \"1106541 / NOUPHER\",\n        \"Issue Date\": \"2019-03-16\",\n        \"Ration Card ID\": \"1106280135\",\n        \"Scheme\": \"NFSA\",\n        \"State\": \"KERALA\"\n      },\n      \"members\": [\n        {\n  ",
+    "uiError": null,
+    "uiShowedResult": true,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "notes": []
+  },
+  {
+    "label": "UPI Lookup",
+    "endpoint": "/upi",
+    "param": "id",
+    "sample": "playwrighttest@upi",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/upi?id=playwrighttest%40upi",
+    "upstreamStatus": 200,
+    "upstreamMs": -1779186853404,
+    "upstreamOk": true,
+    "responsePreview": "{\n  \"success\": true,\n  \"data\": {\n    \"data\": {\n      \"verify_chumts\": []\n    },\n    \"code\": \"NOT_FOUND\",\n    \"message\": \"No data found for the given query\"\n  },\n  \"source\": \"/upi\",\n  \"input\": \"playwrighttest@upi\",\n  \"proxy\": \"Netlify Functions\",\n  \"timestamp\": \"2026-05-19T10:34:14.893Z\"\n}",
+    "uiError": null,
+    "uiShowedResult": true,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "notes": []
+  },
+  {
+    "label": "UPI Lookup v2",
+    "endpoint": "/upi2",
+    "param": "id",
+    "sample": "playwrighttest@upi",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/upi2?id=playwrighttest%40upi",
+    "upstreamStatus": 503,
+    "upstreamMs": -1779186866760,
+    "upstreamOk": false,
+    "responsePreview": "{\"error\":\"Service temporarily unavailable\",\"message\":\"Upstream error: 400\",\"endpoint\":\"/upi2\"}",
+    "uiError": "Upstream returned HTTP 503",
+    "uiShowedResult": true,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 503 ()"
+    ],
+    "failedRequests": [],
+    "notes": []
+  },
+  {
+    "label": "Vehicle Lookup",
+    "endpoint": "/vehicle",
+    "param": "registration",
+    "sample": "MH01AB1234",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/vehicle?registration=MH01AB1234",
+    "upstreamStatus": 503,
+    "upstreamMs": -1779186869705,
+    "upstreamOk": false,
+    "responsePreview": "{\"error\":\"Service temporarily unavailable\",\"message\":\"Upstream error: 502\",\"endpoint\":\"/vehicle\"}",
+    "uiError": "Upstream returned HTTP 503",
+    "uiShowedResult": true,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 503 ()"
+    ],
+    "failedRequests": [],
+    "notes": []
+  },
+  {
+    "label": "General Query",
+    "endpoint": "/v2",
+    "param": "query",
+    "sample": "playwright-test-query",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/v2?query=playwright-test-query",
+    "upstreamStatus": 400,
+    "upstreamMs": -1779186872873,
+    "upstreamOk": false,
+    "responsePreview": "{\"error\":\"Invalid vehicle registration format (e.g., JK05F0106)\"}",
+    "uiError": "Upstream returned HTTP 400",
+    "uiShowedResult": true,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 400 ()"
+    ],
+    "failedRequests": [],
+    "notes": []
+  },
+  {
+    "label": "PAN Lookup",
+    "endpoint": "/pan",
+    "param": "pan",
+    "sample": "ABCDE1234F",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/pan?pan=ABCDE1234F",
+    "upstreamStatus": 503,
+    "upstreamMs": -1779186874549,
+    "upstreamOk": false,
+    "responsePreview": "{\"error\":\"Service temporarily unavailable\",\"message\":\"Upstream error: 403\",\"endpoint\":\"/pan\"}",
+    "uiError": "Upstream returned HTTP 503",
+    "uiShowedResult": true,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 503 ()"
+    ],
+    "failedRequests": [],
+    "notes": []
+  },
+  {
+    "label": "Gas Connection Lookup",
+    "endpoint": "/gas",
+    "param": "num",
+    "sample": "1234567890",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/gas?num=1234567890",
+    "upstreamStatus": 503,
+    "upstreamMs": -1779186876232,
+    "upstreamOk": false,
+    "responsePreview": "{\"error\":\"Service temporarily unavailable\",\"message\":\"Upstream error: 403\",\"endpoint\":\"/gas\"}",
+    "uiError": "Upstream returned HTTP 503",
+    "uiShowedResult": true,
+    "consoleErrors": [
+      "Failed to load resource: the server responded with a status of 503 ()"
+    ],
+    "failedRequests": [],
+    "notes": []
+  },
+  {
+    "label": "FASTag Lookup",
+    "endpoint": "/fastag",
+    "param": "vrn",
+    "sample": "MH01AB1234",
+    "upstreamUrl": "https://anuapi.netlify.app/.netlify/functions/api/fastag?vrn=MH01AB1234",
+    "upstreamStatus": 200,
+    "upstreamMs": -1779186879962,
+    "upstreamOk": true,
+    "responsePreview": "{\n  \"success\": true,\n  \"data\": {\n    \"data\": {\n      \"balance\": null,\n      \"bank\": null,\n      \"bbpou_ref_id\": null,\n      \"biller_id\": null,\n      \"max_recharge\": null,\n      \"min_recharge\": null,\n      \"vehicle_details\": {\n        \"color\": \"\",\n        \"make\": \"\",\n        \"model\": \"\",\n        \"type\": \"car\"\n      },\n      \"vehicle_number\": \"MH01AB1234\"\n    }\n  },\n  \"source\": \"/fastag\",\n  \"input\":",
+    "uiError": null,
+    "uiShowedResult": true,
+    "consoleErrors": [],
+    "failedRequests": [],
+    "notes": []
+  }
+]

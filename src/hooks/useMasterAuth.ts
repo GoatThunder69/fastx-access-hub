@@ -85,11 +85,52 @@ export function useMasterAuth() {
   useEffect(() => {
     ignoreRef.current = false;
 
-    // 1. Check existing session first
+    // 1. Check existing session first — with a network-error safety net so the
+    //    loading spinner never hangs forever when Supabase is unreachable.
+    const sessionTimeout = setTimeout(() => {
+      if (!initialized.current && !ignoreRef.current) {
+        initialized.current = true;
+        // Network is unavailable; honour any cached password-auth credentials
+        // and fall back to unauthenticated if there are none.
+        const hasCached =
+          localStorage.getItem('cfms_master') === 'true' &&
+          isValidRole(localStorage.getItem('cfms_master_role') as string);
+        if (!hasCached) {
+          setState(s => ({ ...s, loading: false, error: 'Network unavailable. Please check your connection.' }));
+        } else {
+          setState(s => ({ ...s, loading: false }));
+        }
+      }
+    }, 10_000);
+
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      clearTimeout(sessionTimeout);
       if (ignoreRef.current) return;
       initialized.current = true;
+      // If password-auth is active and the OAuth session belongs to a different
+      // (unrecognised) account, skip OAuth processing to avoid accidentally
+      // logging out the password-auth user.
+      const isPasswordAuthActive =
+        localStorage.getItem('cfms_master') === 'true' &&
+        isValidRole(localStorage.getItem('cfms_master_role') as string);
+      if (isPasswordAuthActive && session?.user && !session.user.email) {
+        // Malformed session — ignore it
+        setState(s => ({ ...s, loading: false }));
+        return;
+      }
       await processUser(session?.user ?? null, ignoreRef);
+    }).catch(() => {
+      clearTimeout(sessionTimeout);
+      if (ignoreRef.current) return;
+      initialized.current = true;
+      const hasCached =
+        localStorage.getItem('cfms_master') === 'true' &&
+        isValidRole(localStorage.getItem('cfms_master_role') as string);
+      if (!hasCached) {
+        setState(s => ({ ...s, loading: false, error: 'Network error. Please check your connection and refresh.' }));
+      } else {
+        setState(s => ({ ...s, loading: false }));
+      }
     });
 
     // 2. Listen for future auth changes (sign-in, sign-out, token refresh)
@@ -98,6 +139,7 @@ export function useMasterAuth() {
     });
 
     return () => {
+      clearTimeout(sessionTimeout);
       ignoreRef.current = true;
       subscription.unsubscribe();
     };

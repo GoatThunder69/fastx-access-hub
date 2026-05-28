@@ -7,6 +7,7 @@ type UsePanelLandingResult = {
   notFound: boolean;
   disabled: boolean;
   redirectTo: string | null;
+  slowNetwork: boolean;
 };
 
 const clearPanelSessions = (panelId: string) => {
@@ -46,6 +47,7 @@ export const usePanelLanding = (slug: string | undefined): UsePanelLandingResult
   const [notFound, setNotFound] = useState(false);
   const [disabled, setDisabled] = useState(false);
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
+  const [slowNetwork, setSlowNetwork] = useState(false);
 
   useEffect(() => {
     if (!slug) {
@@ -57,14 +59,20 @@ export const usePanelLanding = (slug: string | undefined): UsePanelLandingResult
     let cancelled = false;
     const slugLower = slug.toLowerCase();
 
-    // Safety valve: if the DB never responds, unblock the UI after 8 s.
+    // Show "slow connection" hint after 3 s without a response.
+    const slowTimer = setTimeout(() => {
+      if (!cancelled) setSlowNetwork(true);
+    }, 3000);
+
+    // Hard safety valve: if the DB never responds, unblock the UI after 15 s.
     const timeout = setTimeout(() => {
       if (!cancelled) { setNotFound(true); setLoading(false); }
-    }, 8000);
+    }, 15_000);
 
     // Apply a fetched/cached row to state and resolve loading.
     const applyRow = (row: ManagedPanel) => {
       if (cancelled) return;
+      setSlowNetwork(false);
       setPanel(row);
       const expired = row.expiry_date && new Date(row.expiry_date) < new Date();
       const isDisabled = !row.is_active || Boolean(expired);
@@ -74,6 +82,7 @@ export const usePanelLanding = (slug: string | undefined): UsePanelLandingResult
         invalidateCache(slugLower);
         clearPanelSessions(row.id);
         clearTimeout(timeout);
+        clearTimeout(slowTimer);
         setLoading(false);
         return;
       }
@@ -82,6 +91,7 @@ export const usePanelLanding = (slug: string | undefined): UsePanelLandingResult
         const storedPortal = localStorage.getItem(`cfms_portal_${row.id}`);
         if (storedPortal === "true") {
           clearTimeout(timeout);
+          clearTimeout(slowTimer);
           setRedirectTo(`/${slugLower}/portal`);
           setLoading(false);
           return;
@@ -89,6 +99,7 @@ export const usePanelLanding = (slug: string | undefined): UsePanelLandingResult
         const storedAdmin = localStorage.getItem(`cfms_panel_${row.id}`);
         if (storedAdmin === "true") {
           clearTimeout(timeout);
+          clearTimeout(slowTimer);
           setRedirectTo(`/${slugLower}/admin`);
           setLoading(false);
           return;
@@ -96,7 +107,37 @@ export const usePanelLanding = (slug: string | undefined): UsePanelLandingResult
       } catch { /* ignore storage errors */ }
 
       clearTimeout(timeout);
+      clearTimeout(slowTimer);
       setLoading(false);
+    };
+
+    // Attempt a single DB fetch with automatic retry on transient network errors.
+    const fetchWithRetry = async (retriesLeft: number): Promise<void> => {
+      try {
+        const { data, error } = await supabase.rpc("get_panel_by_slug", { p_slug: slugLower });
+        if (cancelled) return;
+        const row = Array.isArray(data) ? data[0] : data;
+        if (error || !row) {
+          clearTimeout(timeout);
+          clearTimeout(slowTimer);
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+        setCachedRow(slugLower, row as ManagedPanel);
+        applyRow(row as ManagedPanel);
+      } catch {
+        if (cancelled) return;
+        if (retriesLeft > 0) {
+          // Exponential back-off: 1.5 s → 3 s
+          await new Promise(res => setTimeout(res, 1500 * (3 - retriesLeft)));
+          return fetchWithRetry(retriesLeft - 1);
+        }
+        clearTimeout(timeout);
+        clearTimeout(slowTimer);
+        setNotFound(true);
+        setLoading(false);
+      }
     };
 
     const fetchPanel = async () => {
@@ -104,6 +145,7 @@ export const usePanelLanding = (slug: string | undefined): UsePanelLandingResult
       setNotFound(false);
       setDisabled(false);
       setRedirectTo(null);
+      setSlowNetwork(false);
 
       // Serve from cache immediately so the UI is instant on repeat visits.
       const cached = getCachedRow(slugLower);
@@ -132,22 +174,8 @@ export const usePanelLanding = (slug: string | undefined): UsePanelLandingResult
         return;
       }
 
-      // No cache — fetch from DB and block until done.
-      try {
-        const { data, error } = await supabase.rpc("get_panel_by_slug", { p_slug: slugLower });
-        if (cancelled) return;
-        const row = Array.isArray(data) ? data[0] : data;
-        if (error || !row) {
-          clearTimeout(timeout);
-          setNotFound(true);
-          setLoading(false);
-          return;
-        }
-        setCachedRow(slugLower, row as ManagedPanel);
-        applyRow(row as ManagedPanel);
-      } catch {
-        if (!cancelled) { clearTimeout(timeout); setNotFound(true); setLoading(false); }
-      }
+      // No cache — fetch from DB with retry on transient errors.
+      await fetchWithRetry(2);
     };
 
     fetchPanel();
@@ -155,8 +183,9 @@ export const usePanelLanding = (slug: string | undefined): UsePanelLandingResult
     return () => {
       cancelled = true;
       clearTimeout(timeout);
+      clearTimeout(slowTimer);
     };
   }, [slug]);
 
-  return { panel, loading, notFound, disabled, redirectTo };
+  return { panel, loading, notFound, disabled, redirectTo, slowNetwork };
 };

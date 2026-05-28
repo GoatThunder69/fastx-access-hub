@@ -1,10 +1,18 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase, type ManagedPanel, type Broadcast, ALL_ENDPOINT_PATHS, ENDPOINTS, fetchAllEndpoints, generateLicenseKey, generateSlug } from '@/lib/supabase';
+import { supabase, type ManagedPanel, type Broadcast, ALL_ENDPOINT_PATHS, ENDPOINTS, fetchAllEndpoints, invalidateEndpointsCache, generateLicenseKey, generateSlug } from '@/lib/supabase';
 import CFMSLogo from '@/components/CFMSLogo';
 import { useMasterAuth, type MasterRole } from '@/hooks/useMasterAuth';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+
+import {
+  Crown, LogOut, Plus, ToggleLeft, ToggleRight, Trash2,
+  Settings, Send as SendIcon, BarChart3, FileText, Key,
+  Loader2, RefreshCw, Copy, Eye, EyeOff, Lock,
+  ArrowLeft, Shield, Activity, Globe, Clock, Users,
+  CheckSquare, Square, ChevronRight, Pencil, UserCircle
+} from 'lucide-react';
 
 // Heavy admin tabs are split out so opening MasterPanel doesn't pull recharts
 // (~250 kB) and the full keys/logs editors. Each tab is fetched on first click.
@@ -18,13 +26,6 @@ const TabFallback = () => (
     <Loader2 className="w-6 h-6 animate-spin text-primary" />
   </div>
 );
-import {
-  Crown, LogOut, Plus, ToggleLeft, ToggleRight, Trash2,
-  Settings, Send as SendIcon, BarChart3, FileText, Key,
-  Loader2, RefreshCw, Copy, Eye, EyeOff, Lock,
-  ArrowLeft, Shield, Activity, Globe, Clock, Users,
-  CheckSquare, Square, ChevronRight, Pencil, UserCircle
-} from 'lucide-react';
 
 const TABS = [
   { id: 'panels', label: 'Panels', icon: Shield },
@@ -150,11 +151,17 @@ const MasterPanel = () => {
         .then(({ data }) => setBroadcasts(data || []));
     }
     if (tab === 'endpoints') {
+      // Always invalidate before loading so newly created endpoints are visible
+      invalidateEndpointsCache();
       fetchAllEndpoints().then(setAllEndpoints);
     }
     if (tab === 'admins') {
       fetchAdmins();
     }
+    // When leaving the endpoints tab, invalidate so panel views pick up changes
+    return () => {
+      if (tab === 'endpoints') invalidateEndpointsCache();
+    };
   }, [tab, isAuthenticated]);
 
   // Refresh endpoints when returning to panels tab with a selected panel

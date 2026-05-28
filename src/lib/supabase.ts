@@ -45,8 +45,8 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
 });
 
 // Lightweight health check used by admin/sub-admin panels.
-// Returns true if the Supabase REST endpoint is reachable within 8s.
-export async function checkSupabaseHealth(timeoutMs = 8000): Promise<boolean> {
+// Returns true if the Supabase REST endpoint is reachable within timeoutMs.
+export async function checkSupabaseHealth(timeoutMs = 6000): Promise<boolean> {
   const controller = new AbortController();
   const t = setTimeout(() => controller.abort(), timeoutMs);
   try {

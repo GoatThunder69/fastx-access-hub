@@ -84,6 +84,7 @@ const CustomEndpointManager = () => {
     if (!confirm(`Delete custom endpoint "${name}"? This cannot be undone.`)) return;
     try {
       await deleteCustomEndpoint(resolveAuth(), id);
+      invalidateEndpointsCache();
     } catch (err) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to delete endpoint', variant: 'destructive' });
       return;

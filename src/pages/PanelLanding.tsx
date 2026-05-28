@@ -14,7 +14,7 @@ const PanelLanding = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
 
-  const { panel, loading, notFound, disabled, redirectTo } = usePanelLanding(slug);
+  const { panel, loading, notFound, disabled, redirectTo, slowNetwork } = usePanelLanding(slug);
 
   // Portal login state
   const [mode, setMode] = useState<"choose" | "portal" | "admin">("choose");
@@ -92,7 +92,14 @@ const PanelLanding = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          {slowNetwork && (
+            <p className="text-xs text-muted-foreground animate-pulse">
+              Slow connection detected — please wait…
+            </p>
+          )}
+        </div>
       </div>
     );
   }

@@ -6,12 +6,14 @@ import Starfield from '@/components/Starfield';
 import {
   Smartphone, Fingerprint, Mail, FileText, Send, Building2,
   CreditCard, Wallet, CircleDollarSign, Car, Search, FileCheck, Flame, Truck,
-  LogOut, User, Loader2, Zap, X, Terminal, Copy, Check, ChevronRight, Activity
+  Globe, Shield, User, Key, Database, Server, Cpu, Hash,
+  LogOut, Loader2, Zap, X, Terminal, Copy, Check, ChevronRight, Activity
 } from 'lucide-react';
 
 const iconMap: Record<string, any> = {
   Smartphone, Fingerprint, Mail, FileText, Send, Building2,
   CreditCard, Wallet, CircleDollarSign, Car, Search, FileCheck, Flame, Truck,
+  Globe, Shield, User, Key, Database, Server, Cpu, Hash,
 };
 
 const Portal = () => {

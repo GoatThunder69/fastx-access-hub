@@ -7,12 +7,14 @@ import Starfield from '@/components/Starfield';
 import {
   Smartphone, Fingerprint, Mail, FileText, Send, Building2,
   CreditCard, Wallet, CircleDollarSign, Car, Search, FileCheck, Flame, Truck,
-  LogOut, User, Loader2, Zap, X, Terminal, Copy, Check, ChevronRight, Activity
+  Globe, Shield, User, Key, Database, Server, Cpu, Hash,
+  LogOut, Loader2, Zap, X, Terminal, Copy, Check, ChevronRight, Activity
 } from 'lucide-react';
 
 const iconMap: Record<string, any> = {
   Smartphone, Fingerprint, Mail, FileText, Send, Building2,
   CreditCard, Wallet, CircleDollarSign, Car, Search, FileCheck, Flame, Truck,
+  Globe, Shield, User, Key, Database, Server, Cpu, Hash,
 };
 
 const getCachedPanel = (slug: string): ManagedPanel | null => {
@@ -43,7 +45,7 @@ const PanelPortal = () => {
 
   useEffect(() => {
     if (!slug) return;
-    const init = async () => {
+    const init = async (retryCount = 0): Promise<void> => {
       try {
         const [{ data: panelRows }, endpoints] = await Promise.all([
           supabase.rpc('get_panel_by_slug', { p_slug: slug.toLowerCase() }),
@@ -62,9 +64,15 @@ const PanelPortal = () => {
 
         setLoading(false);
       } catch {
+        if (retryCount < 2) {
+          await new Promise(res => setTimeout(res, 1500 * (retryCount + 1)));
+          return init(retryCount + 1);
+        }
+        // Last resort: serve from session-storage cache so the portal stays
+        // usable even when the network is completely down.
         const cached = getCachedPanel(slug);
-        const endpoints = await fetchAllEndpoints();
         if (cached && localStorage.getItem(`cfms_portal_${cached.id}`) === 'true') {
+          const endpoints = await fetchAllEndpoints().catch(() => ENDPOINTS);
           setPanel(cached);
           setAllEndpoints(endpoints);
           setLoading(false);

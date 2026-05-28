@@ -59,32 +59,49 @@ const SubAdminPanel = () => {
   const [oldPass, setOldPass] = useState('');
   const [newPass, setNewPass] = useState('');
 
-  // Fetch panel data by slug
+  // Fetch panel data by slug with retry on transient network errors
   useEffect(() => {
     if (!slug) return;
-    const fetchPanel = async () => {
+    const fetchPanel = async (retryCount = 0): Promise<void> => {
       setLoading(true);
-      const cached = getCachedPanel(slug);
-      const { data, error } = await supabase.rpc('get_panel_by_slug', { p_slug: slug.toLowerCase() });
-      const row = (Array.isArray(data) ? data[0] : data) || (!error ? null : cached);
-      if (!row) { navigate(`/${slug}`); return; }
-      // get_panel_by_slug intentionally omits master_license_key + panel_password
-      setPanel(row as ManagedPanel);
-      setPanelId(row.id);
-      // Check if panel is active and not expired
-      const expired = row.expiry_date && new Date(row.expiry_date) < new Date();
-      if (!row.is_active || expired) {
-        setDisabled(true);
-      }
-      // Check localStorage for existing session
-      const storedAuth = localStorage.getItem(`cfms_panel_${row.id}`);
-      if (storedAuth === 'true') {
-        setAuthenticated(true);
-      } else {
+      try {
+        const { data, error } = await supabase.rpc('get_panel_by_slug', { p_slug: slug.toLowerCase() });
+        const row = (Array.isArray(data) ? data[0] : data) ?? (error ? getCachedPanel(slug) : null);
+        if (!row) { navigate(`/${slug}`); return; }
+        // get_panel_by_slug intentionally omits master_license_key + panel_password
+        setPanel(row as ManagedPanel);
+        setPanelId(row.id);
+        // Check if panel is active and not expired
+        const expired = row.expiry_date && new Date(row.expiry_date) < new Date();
+        if (!row.is_active || expired) {
+          setDisabled(true);
+        }
+        // Check localStorage for existing session
+        const storedAuth = localStorage.getItem(`cfms_panel_${row.id}`);
+        if (storedAuth === 'true') {
+          setAuthenticated(true);
+        } else {
+          navigate(`/${slug}`);
+          return;
+        }
+        setLoading(false);
+      } catch {
+        if (retryCount < 2) {
+          await new Promise(res => setTimeout(res, 1500 * (retryCount + 1)));
+          return fetchPanel(retryCount + 1);
+        }
+        // Last resort: serve from session-storage cache
+        const cached = getCachedPanel(slug);
+        if (cached && localStorage.getItem(`cfms_panel_${cached.id}`) === 'true') {
+          setPanel(cached);
+          setPanelId(cached.id);
+          setAuthenticated(true);
+          setLoading(false);
+          return;
+        }
         navigate(`/${slug}`);
-        return;
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchPanel();
   }, [slug, navigate]);
