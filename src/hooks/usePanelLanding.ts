@@ -111,19 +111,37 @@ export const usePanelLanding = (slug: string | undefined): UsePanelLandingResult
       setLoading(false);
     };
 
-    // Attempt a single DB fetch with automatic retry on transient network errors.
+    // Attempt a single DB fetch with automatic retry on transient network errors
+    // OR on Supabase error responses (e.g. RPC timeout, 5xx, RLS glitch).
     const fetchWithRetry = async (retriesLeft: number): Promise<void> => {
       try {
         const { data, error } = await supabase.rpc("get_panel_by_slug", { p_slug: slugLower });
         if (cancelled) return;
         const row = Array.isArray(data) ? data[0] : data;
-        if (error || !row) {
+
+        // Supabase returned an error object — treat it like a transient failure
+        // and retry before giving up, just like we do for thrown exceptions.
+        if (error) {
+          if (retriesLeft > 0) {
+            await new Promise(res => setTimeout(res, 1500 * (3 - retriesLeft)));
+            return fetchWithRetry(retriesLeft - 1);
+          }
           clearTimeout(timeout);
           clearTimeout(slowTimer);
           setNotFound(true);
           setLoading(false);
           return;
         }
+
+        // No error but no row → the slug genuinely doesn't exist.
+        if (!row) {
+          clearTimeout(timeout);
+          clearTimeout(slowTimer);
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+
         setCachedRow(slugLower, row as ManagedPanel);
         applyRow(row as ManagedPanel);
       } catch {

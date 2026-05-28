@@ -124,12 +124,14 @@ const MasterPanel = () => {
       const { data, error } = await supabase.from('managed_panels').select('*').order('created_at', { ascending: false });
       if (error) {
         toast({ title: 'Error loading panels', description: error.message, variant: 'destructive' });
+        // Don't wipe cached panels on a DB error — keep what we have
+      } else {
+        const freshPanels = data || [];
+        setPanels(freshPanels);
+        writeCachedPanels(freshPanels);
+        // Keep selectedPanel in sync with the latest DB data
+        setSelectedPanel(prev => prev ? freshPanels.find(p => p.id === prev.id) ?? prev : null);
       }
-      const freshPanels = data || [];
-      setPanels(freshPanels);
-      writeCachedPanels(freshPanels);
-      // Keep selectedPanel in sync with the latest DB data
-      setSelectedPanel(prev => prev ? freshPanels.find(p => p.id === prev.id) ?? prev : null);
     } catch (err) {
       if (!cachedPanels.length) toast({ title: 'Network issue', description: 'Showing the dashboard shell. Retry when the connection improves.', variant: 'destructive' });
     }
@@ -142,6 +144,14 @@ const MasterPanel = () => {
     fetchPanels();
     fetchAllEndpoints().then(setAllEndpoints);
   }, [isAuthenticated, fetchPanels]);
+
+  // Safety valve: if the network is very slow, never leave the UI stuck in
+  // a permanent loading spinner — resolve after 10 s regardless.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const safety = setTimeout(() => setLoading(false), 10_000);
+    return () => clearTimeout(safety);
+  }, [isAuthenticated]);
 
   // Tab-specific data loading
   useEffect(() => {
@@ -551,7 +561,7 @@ const MasterPanel = () => {
             if (t.id === 'admins' && role === 'monitor') return null;
             return (
               <button key={t.id} role="tab" aria-selected={isActive} onClick={() => { setTab(t.id); setSelectedPanel(null); }}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-300 ${isActive ? 'bg-gradient-to-r from-primary/20 to-primary/10 text-primary border border-primary/30 shadow-[0_0_16px_-4px_hsl(265_72%_58%/0.25)]' : 'text-muted-foreground border border-transparent hover:text-foreground hover:bg-secondary/50'}`}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all duration-300 ${isActive ? 'bg-gradient-to-r from-primary/20 to-primary/10 text-primary border border-primary/30 shadow-[0_0_16px_-4px_hsl(265_72%_58%/0.25)]' : 'text-foreground/70 border border-border/40 bg-secondary/25 hover:text-foreground hover:bg-secondary/60 hover:border-border/60'}`}
               >
                 <Icon className={`w-4 h-4 transition-transform duration-300 ${isActive ? 'scale-110' : ''}`} /> {t.label}
               </button>
@@ -619,8 +629,8 @@ const MasterPanel = () => {
               </div>
             )}
 
-            {/* Panel List */}
-            {loading ? (
+            {/* Panel List — show cached panels immediately even if still refreshing */}
+            {loading && panels.length === 0 ? (
               <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-accent" /></div>
             ) : panels.length === 0 ? (
               <div className="glass-admin p-8 text-center">
