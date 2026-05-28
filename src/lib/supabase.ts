@@ -8,19 +8,20 @@ const RETRYABLE_STATUS = new Set([408, 429, 500, 502, 503, 504]);
 
 const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const timedFetch: typeof fetch = async (input, init = {}) => {
-  const method = (init.method || 'GET').toUpperCase();
+const timedFetch: typeof fetch = async (input, init?: RequestInit) => {
+  const requestInit = init ?? {};
+  const method = (requestInit.method || 'GET').toUpperCase();
   const canRetry = method === 'GET' || method === 'HEAD';
   const attempts = canRetry ? 2 : 1;
 
   for (let attempt = 0; attempt < attempts; attempt++) {
     const controller = new AbortController();
     const onAbort = () => controller.abort();
-    init.signal?.addEventListener('abort', onAbort, { once: true });
+    requestInit.signal?.addEventListener('abort', onAbort, { once: true });
     const timeout = setTimeout(() => controller.abort(), SUPABASE_FETCH_TIMEOUT_MS);
 
     try {
-      const response = await fetch(input, { ...init, signal: controller.signal });
+      const response = await fetch(input, { ...requestInit, signal: controller.signal });
       if (attempt === 0 && canRetry && RETRYABLE_STATUS.has(response.status)) {
         await wait(350);
         continue;
@@ -31,7 +32,7 @@ const timedFetch: typeof fetch = async (input, init = {}) => {
       await wait(350);
     } finally {
       clearTimeout(timeout);
-      init.signal?.removeEventListener('abort', onAbort);
+      requestInit.signal?.removeEventListener('abort', onAbort);
     }
   }
 
