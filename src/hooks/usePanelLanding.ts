@@ -110,20 +110,25 @@ export const usePanelLanding = (slug: string | undefined): UsePanelLandingResult
       if (cached) {
         applyRow(cached);
         // Refresh in background so kill-switch changes propagate silently.
-        supabase.rpc("get_panel_by_slug", { p_slug: slugLower }).then(({ data }) => {
-          if (cancelled) return;
-          const fresh = Array.isArray(data) ? data[0] : data;
-          if (!fresh) return;
-          setCachedRow(slugLower, fresh as ManagedPanel);
-          // If panel was just disabled/expired, update UI immediately.
-          const expired = fresh.expiry_date && new Date(fresh.expiry_date) < new Date();
-          if (!fresh.is_active || Boolean(expired)) {
-            invalidateCache(slugLower);
-            clearPanelSessions(fresh.id);
-            setPanel(fresh as ManagedPanel);
-            setDisabled(true);
+        void (async () => {
+          try {
+            const { data } = await supabase.rpc("get_panel_by_slug", { p_slug: slugLower });
+            if (cancelled) return;
+            const fresh = Array.isArray(data) ? data[0] : data;
+            if (!fresh) return;
+            setCachedRow(slugLower, fresh as ManagedPanel);
+            // If panel was just disabled/expired, update UI immediately.
+            const expired = fresh.expiry_date && new Date(fresh.expiry_date) < new Date();
+            if (!fresh.is_active || Boolean(expired)) {
+              invalidateCache(slugLower);
+              clearPanelSessions(fresh.id);
+              setPanel(fresh as ManagedPanel);
+              setDisabled(true);
+            }
+          } catch {
+            // keep the cached row active during low-network periods
           }
-        }).catch(() => {});
+        })();
         return;
       }
 
