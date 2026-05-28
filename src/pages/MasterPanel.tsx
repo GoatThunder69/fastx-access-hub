@@ -41,6 +41,23 @@ const ROLE_BADGE: Record<MasterRole, { label: string; color: string }> = {
   monitor: { label: 'MONITOR', color: 'bg-success/15 text-success border-success/25' },
 };
 
+const MASTER_PANELS_CACHE_KEY = 'cfms_master_panels_cache';
+
+const readCachedPanels = (): ManagedPanel[] => {
+  try {
+    const raw = sessionStorage.getItem(MASTER_PANELS_CACHE_KEY) || localStorage.getItem(MASTER_PANELS_CACHE_KEY);
+    if (!raw) return [];
+    const { panels, ts }: { panels: ManagedPanel[]; ts: number } = JSON.parse(raw);
+    return Array.isArray(panels) && Date.now() - ts < 5 * 60 * 1000 ? panels : [];
+  } catch { return []; }
+};
+
+const writeCachedPanels = (panels: ManagedPanel[]) => {
+  const payload = JSON.stringify({ panels, ts: Date.now() });
+  try { sessionStorage.setItem(MASTER_PANELS_CACHE_KEY, payload); } catch {}
+  try { localStorage.setItem(MASTER_PANELS_CACHE_KEY, payload); } catch {}
+};
+
 const MasterPanel = () => {
   const [tab, setTab] = useState('panels');
   const [panels, setPanels] = useState<ManagedPanel[]>([]);
@@ -95,7 +112,13 @@ const MasterPanel = () => {
   // Fetch panels - only when authenticated
   const fetchPanels = useCallback(async () => {
     if (!isAuthenticated) return;
-    setLoading(true);
+    const cachedPanels = readCachedPanels();
+    if (cachedPanels.length) {
+      setPanels(cachedPanels);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     try {
       const { data, error } = await supabase.from('managed_panels').select('*').order('created_at', { ascending: false });
       if (error) {
@@ -103,10 +126,11 @@ const MasterPanel = () => {
       }
       const freshPanels = data || [];
       setPanels(freshPanels);
+      writeCachedPanels(freshPanels);
       // Keep selectedPanel in sync with the latest DB data
       setSelectedPanel(prev => prev ? freshPanels.find(p => p.id === prev.id) ?? prev : null);
     } catch (err) {
-      toast({ title: 'Network error', description: 'Failed to load panels', variant: 'destructive' });
+      if (!cachedPanels.length) toast({ title: 'Network issue', description: 'Showing the dashboard shell. Retry when the connection improves.', variant: 'destructive' });
     }
     setLoading(false);
   }, [isAuthenticated]);
