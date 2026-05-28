@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ENDPOINTS, AVAILABLE_ICONS, type CustomEndpoint } from '@/lib/supabase';
+import { ENDPOINTS, AVAILABLE_ICONS, invalidateEndpointsCache, type CustomEndpoint } from '@/lib/supabase';
 import { listCustomEndpoints, createCustomEndpoint, deleteCustomEndpoint, resolveAuth } from '@/lib/adminApi';
 import {
   Plus, Trash2, Loader2, RefreshCw, Globe, Search,
@@ -68,14 +68,16 @@ const CustomEndpointManager = () => {
         label: label.trim(),
         icon,
       });
+      invalidateEndpointsCache();
       toast({ title: 'Endpoint Created', description: `"${label.trim()}" (${path}) added successfully` });
       setLabel(''); setEndpoint('/'); setParam(''); setIcon('Search');
       setShowForm(false);
     } catch (err) {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to create endpoint', variant: 'destructive' });
+    } finally {
+      await fetchEndpoints();
+      setCreating(false);
     }
-    await fetchEndpoints();
-    setCreating(false);
   };
 
   const deleteEndpoint = async (id: string, name: string) => {
@@ -86,6 +88,7 @@ const CustomEndpointManager = () => {
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to delete endpoint', variant: 'destructive' });
       return;
     }
+    invalidateEndpointsCache();
     setEndpoints(endpoints.filter(e => e.id !== id));
     toast({ title: 'Endpoint Deleted', description: `"${name}" has been removed` });
   };
