@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { supabase, fetchAllEndpoints } from '@/lib/supabase';
 import CFMSLogo from '@/components/CFMSLogo';
 import Starfield from '@/components/Starfield';
-import { Key, Shield, Loader2, Sparkles, ArrowRight, Zap } from 'lucide-react';
+import { Key, Shield, Loader2, Sparkles, ArrowRight, Zap, Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
   const [key, setKey] = useState('');
+  const [showKey, setShowKey] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -90,7 +91,7 @@ const Login = () => {
             </label>
             <div className="relative">
               <input
-                type="password"
+                type={showKey ? 'text' : 'password'}
                 value={key}
                 onChange={e => setKey(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
@@ -98,9 +99,14 @@ const Login = () => {
                 className="input-glass w-full text-sm pr-10"
                 autoFocus
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Zap className="w-4 h-4 text-primary/30" />
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowKey(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary transition-colors"
+                tabIndex={-1}
+              >
+                {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 

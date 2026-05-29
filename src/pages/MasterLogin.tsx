@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useMasterAuth } from '@/hooks/useMasterAuth';
 import { MASTER_PASSWORD } from '@/lib/supabase';
 import CFMSLogo from '@/components/CFMSLogo';
-import { Crown, Loader2, ArrowLeft, ShieldCheck, Lock, ArrowRight } from 'lucide-react';
+import { Crown, Loader2, ArrowLeft, ShieldCheck, Lock, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 const MasterLogin = () => {
   const navigate = useNavigate();
   const { user, masterAdmin, role, isPasswordAuth, loading, error, signInWithGoogle, signOut } = useMasterAuth();
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [passError, setPassError] = useState('');
 
   useEffect(() => {
@@ -121,16 +122,21 @@ const MasterLogin = () => {
                 </label>
                 <div className="relative">
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     onKeyDown={e => e.key === 'Enter' && handlePasswordLogin()}
                     placeholder="Enter master password"
                     className="input-glass w-full text-sm pr-10"
                   />
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Crown className="w-4 h-4 text-primary/30" />
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-primary/40 hover:text-primary transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
 
                 {passError && (

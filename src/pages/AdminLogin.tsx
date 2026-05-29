@@ -2,17 +2,18 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ADMIN_PASSWORD } from '@/lib/supabase';
 import CFMSLogo from '@/components/CFMSLogo';
-import { Shield, Lock, ArrowLeft, AlertTriangle, ArrowRight } from 'lucide-react';
+import { Shield, Lock, ArrowLeft, AlertTriangle, ArrowRight, Eye, EyeOff } from 'lucide-react';
 
 const AdminLogin = () => {
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
   const handleLogin = () => {
-    if (!password) return;
+    if (!password.trim()) return;
     setError('');
-    if (password === ADMIN_PASSWORD) {
+    if (password.trim() === ADMIN_PASSWORD) {
       localStorage.setItem('cfms_admin', 'true');
       // adminApi helper reads this to call admin_* RPCs server-side
       localStorage.setItem('cfms_admin_pwd', password);
@@ -61,7 +62,7 @@ const AdminLogin = () => {
             </label>
             <div className="relative">
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleLogin()}
@@ -69,9 +70,14 @@ const AdminLogin = () => {
                 className="input-admin w-full text-sm pr-10"
                 autoFocus
               />
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Lock className="w-4 h-4 text-accent/30" />
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowPassword(v => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-accent/40 hover:text-accent transition-colors"
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
           </div>
 

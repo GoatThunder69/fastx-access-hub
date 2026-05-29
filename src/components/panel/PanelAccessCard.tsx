@@ -1,5 +1,5 @@
-import type { ComponentType } from "react";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { useState, type ComponentType } from "react";
+import { ArrowRight, Loader2, Eye, EyeOff } from "lucide-react";
 
 type Tone = "primary" | "accent";
 
@@ -49,6 +49,8 @@ const PanelAccessCard = ({
   buttonTextIdle,
   buttonTextLoading,
 }: PanelAccessCardProps) => {
+  const [showValue, setShowValue] = useState(false);
+
   return (
     <div className="glass-strong p-8 space-y-6 animate-in-delay-1 shimmer-overlay">
       <button
@@ -64,15 +66,25 @@ const PanelAccessCard = ({
         <label className={`flex items-center gap-2 text-[11px] font-semibold mb-3 tracking-[0.2em] ${toneToLabelClass[tone]}`}>
           <LabelIcon className="w-4 h-4" /> {label}
         </label>
-        <input
-          type="password"
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && onSubmit()}
-          placeholder={placeholder}
-          className={`${toneToInputClass[tone]} w-full text-sm`}
-          autoFocus
-        />
+        <div className="relative">
+          <input
+            type={showValue ? 'text' : 'password'}
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && onSubmit()}
+            placeholder={placeholder}
+            className={`${toneToInputClass[tone]} w-full text-sm pr-10`}
+            autoFocus
+          />
+          <button
+            type="button"
+            onClick={() => setShowValue(v => !v)}
+            className={`absolute right-3 top-1/2 -translate-y-1/2 opacity-40 hover:opacity-100 transition-opacity ${toneToLabelClass[tone]}`}
+            tabIndex={-1}
+          >
+            {showValue ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
       </div>
 
       {error && (
