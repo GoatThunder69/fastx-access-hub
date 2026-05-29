@@ -44,6 +44,38 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true },
 });
 
+// ── Supabase keep-alive ───────────────────────────────────────────────────────
+// Supabase free tier pauses the DB after ~5 min of inactivity, causing the next
+// request to wait 5-15 s for the instance to wake. Pinging every 4 min keeps it
+// awake so users never hit a cold-start delay.
+// The ping is a tiny HEAD-equivalent (limit=1, count=none) that generates
+// minimal DB load and no billing cost.
+const KEEPALIVE_INTERVAL_MS = 4 * 60 * 1000; // 4 minutes
+
+function startKeepAlive() {
+  // Only run in browser environments.
+  if (typeof window === 'undefined') return;
+  const ping = () => {
+    // Fire-and-forget: we don't care about the result, just keeping the connection warm.
+    supabase.from('managed_panels').select('id', { head: true, count: 'none' }).limit(1)
+      .then(() => {}).catch(() => {});
+  };
+  // First ping shortly after load to wake the DB before the user interacts.
+  const initial = setTimeout(ping, 5_000);
+  const interval = setInterval(ping, KEEPALIVE_INTERVAL_MS);
+  // Pause pinging when the tab is hidden to save resources.
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') ping();
+  });
+  // Clean up if the module is somehow unloaded (e.g. HMR).
+  if (import.meta.hot) {
+    import.meta.hot.dispose(() => { clearTimeout(initial); clearInterval(interval); });
+  }
+}
+
+startKeepAlive();
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Lightweight health check used by admin/sub-admin panels.
 // Returns true if the Supabase REST endpoint is reachable within timeoutMs.
 export async function checkSupabaseHealth(timeoutMs = 6000): Promise<boolean> {
