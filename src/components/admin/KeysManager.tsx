@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { generateKey, type ApiKey } from '@/lib/supabase';
 import { listKeys, createKey as apiCreateKey, toggleKey as apiToggleKey, deleteKey as apiDeleteKey, resolveAuth } from '@/lib/adminApi';
+import { fbListKeysByPanel, fbListAllKeys, fbUpsertKey, fbUpdateKey, fbDeleteKey } from '@/lib/firebase';
 import {
   Plus, RefreshCw, Key, Copy, Trash2, Eye, EyeOff,
   Clock, Globe, Loader2, ToggleLeft, ToggleRight,
@@ -31,16 +32,44 @@ const KeysManager = ({ panelId }: { panelId?: string } = {}) => {
 
   const fetchKeys = async (signal?: { cancelled: boolean }) => {
     setLoading(true);
+    let supabaseResolved = false;
+
+    // ── Firebase: instant read-mirror, clears spinner immediately ────────────
+    // Firestore is always warm (~200-400ms) — show data before Supabase wakes up.
+    const fbPromise = (panelId ? fbListKeysByPanel(panelId) : fbListAllKeys())
+      .then(fbKeys => {
+        if (signal?.cancelled || supabaseResolved) return;
+        const filtered = fbKeys.filter(k => k.key_value);
+        if (filtered.length > 0) {
+          setKeys(filtered);
+          setLoading(false);
+        }
+      })
+      .catch(() => {}); // never block on Firebase errors
+
+    // ── Supabase: authoritative source of truth, updates once ready ──────────
     try {
       const data = await listKeys(resolveAuth(panelId));
+      supabaseResolved = true;
       if (signal?.cancelled) return;
-      setKeys((data || []).filter(k => k.key_value));
+      const filtered = (data || []).filter(k => k.key_value);
+      setKeys(filtered);
+      setLoading(false);
+      // Keep Firebase mirror in sync so next cold-start is instant
+      filtered.forEach(k => void fbUpsertKey(k));
     } catch (err) {
+      supabaseResolved = true;
       if (signal?.cancelled) return;
-      toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to fetch API keys', variant: 'destructive' });
-      // Keep existing list — don't wipe on transient network error
-    } finally {
+      // Wait for Firebase to paint its data before clearing spinner
+      await fbPromise;
       if (!signal?.cancelled) setLoading(false);
+      // Only show error toast if Firebase also returned nothing
+      setKeys(prev => {
+        if (prev.length === 0) {
+          toast({ title: 'Error loading keys', description: err instanceof Error ? err.message : 'Failed to fetch API keys', variant: 'destructive' });
+        }
+        return prev;
+      });
     }
   };
 
@@ -115,26 +144,34 @@ const KeysManager = ({ panelId }: { panelId?: string } = {}) => {
   };
 
   const toggleKey = async (id: string, currentState: boolean) => {
+    const newState = !currentState;
+    // Optimistic UI update — instant feel, roll back if RPC fails
+    setKeys(prev => prev.map(k => k.id === id ? { ...k, is_active: newState } : k));
     try {
-      await apiToggleKey(resolveAuth(panelId), id, !currentState);
+      await apiToggleKey(resolveAuth(panelId), id, newState);
+      void fbUpdateKey(id, { is_active: newState }); // mirror to Firebase
+      toast({ title: newState ? 'Key Enabled' : 'Key Disabled', description: `Key has been ${newState ? 'enabled' : 'disabled'}` });
     } catch (err) {
+      // Roll back optimistic update
+      setKeys(prev => prev.map(k => k.id === id ? { ...k, is_active: currentState } : k));
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to toggle key', variant: 'destructive' });
-      return;
     }
-    setKeys(keys.map(k => k.id === id ? { ...k, is_active: !currentState } : k));
-    toast({ title: !currentState ? 'Key Enabled' : 'Key Disabled', description: `Key has been ${!currentState ? 'enabled' : 'disabled'}` });
   };
 
   const deleteKey = async (id: string) => {
     if (!confirm('Delete this key permanently? This action cannot be undone.')) return;
+    // Optimistic UI update
+    const removed = keys.find(k => k.id === id);
+    setKeys(prev => prev.filter(k => k.id !== id));
     try {
       await apiDeleteKey(resolveAuth(panelId), id);
+      void fbDeleteKey(id); // mirror to Firebase
+      toast({ title: 'Key Deleted', description: 'API key has been permanently deleted' });
     } catch (err) {
+      // Roll back
+      if (removed) setKeys(prev => [...prev, removed].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()));
       toast({ title: 'Error', description: err instanceof Error ? err.message : 'Failed to delete key', variant: 'destructive' });
-      return;
     }
-    setKeys(keys.filter(k => k.id !== id));
-    toast({ title: 'Key Deleted', description: 'API key has been permanently deleted' });
   };
 
   const copyKey = (val: string) => {

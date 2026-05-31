@@ -90,6 +90,31 @@ export async function fbGetAllPanels(): Promise<ManagedPanel[]> {
   }
 }
 
+/** Fetch all API keys for a specific panel. Primary fast read path. */
+export async function fbListKeysByPanel(panelId: string): Promise<ApiKey[]> {
+  try {
+    const q = query(collection(db, 'api_keys'), where('panel_id', '==', panelId));
+    const snap = await getDocs(q);
+    return snap.docs
+      .map(d => d.data() as ApiKey)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  } catch {
+    return [];
+  }
+}
+
+/** Fetch all API keys (global / admin view). Primary fast read path. */
+export async function fbListAllKeys(): Promise<ApiKey[]> {
+  try {
+    const snap = await getDocs(collection(db, 'api_keys'));
+    return snap.docs
+      .map(d => d.data() as ApiKey)
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  } catch {
+    return [];
+  }
+}
+
 // ── Write helpers (mirror Supabase writes to keep Firestore current) ──────────
 // These are all fire-and-forget — they never throw, so a Firestore failure
 // never blocks or rolls back the Supabase write.
