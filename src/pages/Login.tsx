@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, fetchAllEndpoints } from '@/lib/supabase';
+import { fbValidateKey } from '@/lib/firebase';
 import CFMSLogo from '@/components/CFMSLogo';
 import Starfield from '@/components/Starfield';
 import { Key, Shield, Loader2, Sparkles, ArrowRight, Zap, Eye, EyeOff } from 'lucide-react';
@@ -42,6 +43,15 @@ const Login = () => {
       // so there's no need to write to localStorage before navigating.
       navigate('/portal');
     } catch (err: unknown) {
+      // Supabase failed (timeout / cold start) — try Firebase as fallback
+      const fbRow = await fbValidateKey(key.trim());
+      if (fbRow) {
+        localStorage.setItem('cfms_key', fbRow.key_value);
+        localStorage.setItem('cfms_key_name', fbRow.name);
+        localStorage.setItem('cfms_key_id', fbRow.id);
+        navigate('/portal');
+        return;
+      }
       setError(err instanceof Error ? err.message : 'Connection error');
     } finally {
       setLoading(false);

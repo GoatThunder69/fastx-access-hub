@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase, type ManagedPanel, type Broadcast, ALL_ENDPOINT_PATHS, ENDPOINTS, fetchAllEndpoints, invalidateEndpointsCache, generateLicenseKey, generateSlug } from '@/lib/supabase';
+import { fbUpsertPanel, fbUpdatePanel, fbDeletePanel, fbGetAllPanels } from '@/lib/firebase';
 import CFMSLogo from '@/components/CFMSLogo';
 import { useMasterAuth, type MasterRole } from '@/hooks/useMasterAuth';
 import { toast } from '@/hooks/use-toast';
@@ -86,6 +87,9 @@ const MasterPanel = () => {
   const [changingPassword, setChangingPassword] = useState<string | null>(null);
   const [newPass, setNewPass] = useState('');
 
+  // Firebase sync
+  const [fbSyncing, setFbSyncing] = useState(false);
+
   // Quick-login as admin or user from master panel
   const [quickLoginPanel, setQuickLoginPanel] = useState<ManagedPanel | null>(null);
   const [quickLoginMode, setQuickLoginMode] = useState<'admin' | 'user' | null>(null);
@@ -129,8 +133,16 @@ const MasterPanel = () => {
     try {
       const { data, error } = await supabase.from('managed_panels').select('*').order('created_at', { ascending: false });
       if (error) {
-        toast({ title: 'Error loading panels', description: error.message, variant: 'destructive' });
-        // Don't wipe cached panels on a DB error — keep what we have
+        // Supabase failed — try Firebase mirror before showing error
+        const fbPanels = await fbGetAllPanels();
+        if (fbPanels.length > 0) {
+          const sorted = fbPanels.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          setPanels(sorted);
+          writeCachedPanels(sorted);
+          setSelectedPanel(prev => prev ? sorted.find(p => p.id === prev.id) ?? prev : null);
+        } else {
+          toast({ title: 'Error loading panels', description: error.message, variant: 'destructive' });
+        }
       } else {
         const freshPanels = data || [];
         setPanels(freshPanels);
@@ -139,7 +151,15 @@ const MasterPanel = () => {
         setSelectedPanel(prev => prev ? freshPanels.find(p => p.id === prev.id) ?? prev : null);
       }
     } catch (err) {
-      if (!cachedPanels.length) toast({ title: 'Network issue', description: 'Showing the dashboard shell. Retry when the connection improves.', variant: 'destructive' });
+      // Supabase threw (network/timeout) — try Firebase before showing shell message
+      const fbPanels = await fbGetAllPanels();
+      if (fbPanels.length > 0) {
+        const sorted = fbPanels.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        setPanels(sorted);
+        writeCachedPanels(sorted);
+      } else if (!cachedPanels.length) {
+        toast({ title: 'Network issue', description: 'Showing the dashboard shell. Retry when the connection improves.', variant: 'destructive' });
+      }
     }
     setLoading(false);
   }, [isAuthenticated]);
@@ -299,6 +319,8 @@ const MasterPanel = () => {
         if (import.meta.env.DEV) console.log('Panel created successfully:', created);
         toast({ title: 'Panel Created', description: `URL: /${slug} | License: ${licenseKey}` });
         setNewName(''); setNewPassword('admin123'); setNewExpiry(''); setShowCreate(false);
+        // Mirror to Firebase so the panel is readable even during Supabase cold starts
+        if (created?.[0]) void fbUpsertPanel(created[0] as ManagedPanel);
         await fetchPanels();
       }
     } catch (err: any) {
@@ -315,6 +337,7 @@ const MasterPanel = () => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return;
     }
+    void fbUpdatePanel(panel.id, { is_active: newActive });
     const updated = { ...panel, is_active: newActive };
     const newPanels = panels.map(p => p.id === panel.id ? updated : p);
     setPanels(newPanels);
@@ -330,6 +353,7 @@ const MasterPanel = () => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return;
     }
+    void fbDeletePanel(id);
     const newPanels = panels.filter(p => p.id !== id);
     setPanels(newPanels);
     writeCachedPanels(newPanels);
@@ -355,6 +379,7 @@ const MasterPanel = () => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return;
     }
+    void fbUpdatePanel(panelId, { panel_password: newPass.trim() });
     const updatedPanels = panels.map(p => p.id === panelId ? { ...p, panel_password: newPass.trim() } : p);
     setPanels(updatedPanels);
     writeCachedPanels(updatedPanels);
@@ -371,6 +396,7 @@ const MasterPanel = () => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return;
     }
+    void fbUpdatePanel(panel.id, { allowed_endpoints: updated });
     const updatedPanel = { ...panel, allowed_endpoints: updated };
     const newPanels = panels.map(p => p.id === panel.id ? updatedPanel : p);
     setPanels(newPanels);
@@ -406,6 +432,24 @@ const MasterPanel = () => {
     }
     setBroadcasts(prev => prev.filter(b => b.id !== id));
     toast({ title: 'Broadcast Deleted' });
+  };
+
+  // Sync all current Supabase panels to Firestore in one shot.
+  // Run once after setting up Firebase, then writes are kept in sync automatically.
+  const syncToFirebase = async () => {
+    if (panels.length === 0) {
+      toast({ title: 'No panels to sync', description: 'Load panels first.', variant: 'destructive' });
+      return;
+    }
+    setFbSyncing(true);
+    try {
+      await Promise.all(panels.map(fbUpsertPanel));
+      toast({ title: 'Firebase sync complete', description: `${panels.length} panel${panels.length !== 1 ? 's' : ''} synced to Firestore.` });
+    } catch (err: unknown) {
+      toast({ title: 'Sync failed', description: err instanceof Error ? err.message : 'Unknown error', variant: 'destructive' });
+    } finally {
+      setFbSyncing(false);
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -643,9 +687,20 @@ const MasterPanel = () => {
 
             {/* Create Button - canManage (full + limited) */}
             {canManage && (
-              <button onClick={() => setShowCreate(!showCreate)} className="btn-primary flex items-center gap-2 text-sm px-5 py-2.5">
-                <Plus className="w-4 h-4" /> {showCreate ? 'Cancel' : 'Create New Panel'}
-              </button>
+              <div className="flex items-center gap-3 flex-wrap">
+                <button onClick={() => setShowCreate(!showCreate)} className="btn-primary flex items-center gap-2 text-sm px-5 py-2.5">
+                  <Plus className="w-4 h-4" /> {showCreate ? 'Cancel' : 'Create New Panel'}
+                </button>
+                <button
+                  onClick={syncToFirebase}
+                  disabled={fbSyncing || panels.length === 0}
+                  title="Sync all panels to Firebase Firestore (run once to populate, then auto-synced)"
+                  className="flex items-center gap-2 text-xs px-4 py-2.5 rounded-xl border border-primary/30 text-primary hover:bg-primary/10 transition-all disabled:opacity-40"
+                >
+                  {fbSyncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  {fbSyncing ? 'Syncing…' : 'Sync to Firebase'}
+                </button>
+              </div>
             )}
 
             {/* Create Form */}

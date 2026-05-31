@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase, type ManagedPanel } from "@/lib/supabase";
+import { fbGetPanelBySlug } from "@/lib/firebase";
 
 type UsePanelLandingResult = {
   panel: ManagedPanel | null;
@@ -154,8 +155,17 @@ export const usePanelLanding = (slug: string | undefined): UsePanelLandingResult
           await new Promise(res => setTimeout(res, 1500 * (3 - retriesLeft)));
           return fetchWithRetry(retriesLeft - 1);
         }
-        clearTimeout(timeout);
+        // All Supabase retries exhausted — try Firebase as last resort
         clearTimeout(slowTimer);
+        const fbRow = await fbGetPanelBySlug(slugLower);
+        if (cancelled) return;
+        if (fbRow) {
+          setCachedRow(slugLower, fbRow);
+          applyRow(fbRow);
+          clearTimeout(timeout);
+          return;
+        }
+        clearTimeout(timeout);
         setNotFound(true);
         setLoading(false);
       }
