@@ -94,7 +94,7 @@ export async function checkSupabaseHealth(timeoutMs = 6000): Promise<boolean> {
   }
 }
 
-export const API_BASE = 'https://anuapi.netlify.app/.netlify/functions/api';
+export const API_BASE = 'https://v2-theta-one.vercel.app/api';
 
 export const ADMIN_PASSWORD = 'stk7890';
 export const MASTER_PASSWORD = 'cfms7890';
